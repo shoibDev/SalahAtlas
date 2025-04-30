@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: project-backend
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/islamdb
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: pass
+
+  security:
+    user:
+      name: admin
+      password: password123
