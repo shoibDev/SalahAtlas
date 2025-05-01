@@ -8,7 +8,12 @@ spring:
     username: postgres
     password: pass
 
-  security:
-    user:
-      name: admin
-      password: password123
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+security:
+  jwt:
+    secret-key: ${JWT_SECRET_KEY}
+    expiration-ms: ${JWT_EXPIRATION_MS}
