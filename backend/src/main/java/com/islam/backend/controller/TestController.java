@@ -1,5 +1,6 @@
 package com.islam.backend.controller;
 
+import com.islam.backend.domain.dto.AccountDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,5 +14,6 @@ public class TestController {
     @GetMapping("/{name}")
     public ResponseEntity<String> test_url(@PathVariable String name) {
         return ResponseEntity.ok("Hello " + name);
+
     }
 }
