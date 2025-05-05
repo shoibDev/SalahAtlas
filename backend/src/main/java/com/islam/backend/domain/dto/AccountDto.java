@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -20,4 +21,6 @@ public class AccountDto {
     private String lastName;
     private LocalDateTime createdAt;
     private Geolocation geolocation;
+    private List<UUID> organizedJummahIds;
+    private List<UUID> attendingJummahIds;
 }
