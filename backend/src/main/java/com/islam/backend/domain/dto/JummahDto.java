@@ -24,5 +24,5 @@ public class JummahDto {
     private boolean verified;
     private UUID organizerId;
     private List<UUID> attendeeIds;
+    private GeolocationDto geolocation;
 }
-

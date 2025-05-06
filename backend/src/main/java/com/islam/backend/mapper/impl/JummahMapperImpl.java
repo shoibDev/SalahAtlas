@@ -19,10 +19,12 @@ public class JummahMapperImpl implements Mapper<JummahEntity, JummahDto> {
 
     private final ModelMapper modelMapper;
     private final AccountRepository accountRepository;
+    private final GeolocationMapperImpl geolocationMapper;
 
-    public JummahMapperImpl(ModelMapper modelMapper, AccountRepository accountRepository) {
+    public JummahMapperImpl(ModelMapper modelMapper, AccountRepository accountRepository, GeolocationMapperImpl geolocationMapper) {
         this.modelMapper = modelMapper;
         this.accountRepository = accountRepository;
+        this.geolocationMapper = geolocationMapper;
     }
 
     @PostConstruct
@@ -60,7 +62,13 @@ public class JummahMapperImpl implements Mapper<JummahEntity, JummahDto> {
 
     @Override
     public JummahDto mapTo(JummahEntity jummahEntity) {
-        return modelMapper.map(jummahEntity, JummahDto.class);
+        JummahDto jummahDto = modelMapper.map(jummahEntity, JummahDto.class);
+
+        if (jummahEntity.getGeolocation() != null) {
+            jummahDto.setGeolocation(geolocationMapper.mapTo(jummahEntity.getGeolocation()));
+        }
+
+        return jummahDto;
     }
 
     @Override
@@ -77,6 +85,10 @@ public class JummahMapperImpl implements Mapper<JummahEntity, JummahDto> {
                     .stream(accountRepository.findAllById(jummahDto.getAttendeeIds()).spliterator(), false)
                     .collect(Collectors.toList());
             jummahEntity.setAttendees(attendees);
+        }
+
+        if (jummahDto.getGeolocation() != null) {
+            jummahEntity.setGeolocation(geolocationMapper.mapFrom(jummahDto.getGeolocation()));
         }
 
         return jummahEntity;
