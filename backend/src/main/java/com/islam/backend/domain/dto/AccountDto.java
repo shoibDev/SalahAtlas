@@ -1,6 +1,5 @@
 package com.islam.backend.domain.dto;
 
-import com.islam.backend.domain.entities.value.Geolocation;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,7 +19,7 @@ public class AccountDto {
     private String firstName;
     private String lastName;
     private LocalDateTime createdAt;
-    private Geolocation geolocation;
+    private GeolocationDto geolocation;
     private List<UUID> organizedJummahIds;
     private List<UUID> attendingJummahIds;
 }

@@ -20,10 +20,12 @@ public class AccountMapperImpl implements Mapper<AccountEntity, AccountDto> {
 
     private final ModelMapper modelMapper;
     private final JummahRepository jummahRepository;
+    private final GeolocationMapperImpl geolocationMapper;
 
-    public AccountMapperImpl(ModelMapper modelMapper, JummahRepository jummahRepository) {
+    public AccountMapperImpl(ModelMapper modelMapper, JummahRepository jummahRepository, GeolocationMapperImpl geolocationMapper) {
         this.modelMapper = modelMapper;
         this.jummahRepository = jummahRepository;
+        this.geolocationMapper = geolocationMapper;
     }
 
     @PostConstruct
@@ -49,7 +51,13 @@ public class AccountMapperImpl implements Mapper<AccountEntity, AccountDto> {
 
     @Override
     public AccountDto mapTo(AccountEntity accountEntity) {
-        return modelMapper.map(accountEntity, AccountDto.class);
+        AccountDto accountDto = modelMapper.map(accountEntity, AccountDto.class);
+
+        if (accountEntity.getGeolocation() != null) {
+            accountDto.setGeolocation(geolocationMapper.mapTo(accountEntity.getGeolocation()));
+        }
+
+        return accountDto;
     }
 
     @Override
@@ -68,6 +76,11 @@ public class AccountMapperImpl implements Mapper<AccountEntity, AccountDto> {
                    .collect(Collectors.toList());
             accountEntity.setAttendingJummahs(attendingJummahs);
         }
+
+        if (accountDto.getGeolocation() != null) {
+            accountEntity.setGeolocation(geolocationMapper.mapFrom(accountDto.getGeolocation()));
+        }
+
         return accountEntity;
     }
 }
