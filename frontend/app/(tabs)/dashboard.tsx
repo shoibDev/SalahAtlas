@@ -2,9 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Dimensions, ActivityIndicator, Alert } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
+import ModelScreen from '../modal';
 
 export default function MapScreen() {
   const [location, setLocation] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedCoords, setSelectedCoords] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -39,6 +42,10 @@ export default function MapScreen() {
             }}
             showsUserLocation={true}
             showsMyLocationButton={true}
+            onLongPress={(event) => {
+              setSelectedCoords(event.nativeEvent.coordinate);
+              setModalVisible(true);
+            }}
         >
           <Marker
               coordinate={{
@@ -48,6 +55,12 @@ export default function MapScreen() {
               title="You are here"
           />
         </MapView>
+
+        <ModelScreen
+            visible={modalVisible}
+            onClose={() => setModalVisible(false)}
+            coords={selectedCoords}
+        />
       </View>
   );
 }
