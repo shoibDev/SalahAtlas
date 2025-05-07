@@ -111,7 +111,7 @@ export default function CompassScreen() {
 
   return (
       <View style={styles.container}>
-        <Text style={styles.header}>🕋 Qibla Direction</Text>
+        <Text style={styles.header}>Qibla Direction</Text>
 
         <View style={styles.glowCircleWrapper}>
           <View style={styles.compassRing}>
@@ -122,7 +122,7 @@ export default function CompassScreen() {
                     transform: [{ scale: scaleAnim }],
                     left: COMPASS_SIZE / 2 + markerX - MARKER_SIZE / 2,
                     top: COMPASS_SIZE / 2 + markerY - MARKER_SIZE / 2,
-                    shadowColor: isExactQibla ? '#00ffcc' : 'transparent',
+                    shadowColor: isExactQibla ? '#6d95e7' : 'transparent',
                     shadowOpacity: isExactQibla ? 1 : 0,
                     shadowRadius: isExactQibla ? 12 : 0,
                   },
@@ -132,11 +132,6 @@ export default function CompassScreen() {
         </View>
 
         <View style={styles.infoContainer}>
-          {isExactQibla && (
-              <View style={styles.qiblaCard}>
-                <Text style={styles.qiblaCardText}>You're Facing Qibla 🕋</Text>
-              </View>
-          )}
 
           <Text style={styles.label}>Your Heading</Text>
           <Text style={styles.value}>{Math.round(heading)}°</Text>
@@ -148,24 +143,27 @@ export default function CompassScreen() {
   );
 }
 
+const PRIMARY_COLOUR = '#1f2937';
+const SECONDARY_COLOUR = '#133383';
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#070b17',
-    paddingTop: 60,
+    backgroundColor: PRIMARY_COLOUR,
+    paddingTop: 150,
     paddingHorizontal: 20,
     alignItems: 'center',
   },
   header: {
-    fontSize: 26,
-    fontWeight: '600',
-    color: '#f9f9f9',
-    marginBottom: 30,
-    letterSpacing: 1.2,
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#ffffff',
+    marginBottom: 16,
+    letterSpacing: 0.5,
     textAlign: 'center',
   },
   glowCircleWrapper: {
-    shadowColor: '#00ffcc',
+    shadowColor: SECONDARY_COLOUR,
     shadowOpacity: 0.3,
     shadowRadius: 50,
     shadowOffset: { width: 0, height: 0 },
@@ -176,9 +174,9 @@ const styles = StyleSheet.create({
     width: COMPASS_SIZE,
     height: COMPASS_SIZE,
     borderRadius: COMPASS_SIZE / 2,
-    backgroundColor: '#121c2c',
+    backgroundColor: '#1e293b', // subtle inner ring
     borderWidth: 3,
-    borderColor: '#00ffcc',
+    borderColor: SECONDARY_COLOUR,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
@@ -188,10 +186,10 @@ const styles = StyleSheet.create({
     width: MARKER_SIZE,
     height: MARKER_SIZE,
     borderRadius: MARKER_SIZE / 2,
-    backgroundColor: '#00ffcc',
+    backgroundColor: SECONDARY_COLOUR,
     borderWidth: 2,
-    borderColor: '#fff',
-    shadowColor: '#00ffcc',
+    borderColor: '#ffffff',
+    shadowColor: SECONDARY_COLOUR,
     shadowOpacity: 0.8,
     shadowRadius: 10,
     elevation: 10,
@@ -200,32 +198,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   qiblaCard: {
-    backgroundColor: 'rgba(0,255,204,0.1)',
-    borderColor: '#00ffcc',
+    backgroundColor: 'rgba(19, 51, 131, 0.15)',
+    borderColor: SECONDARY_COLOUR,
     borderWidth: 1,
     borderRadius: 20,
     paddingVertical: 12,
     paddingHorizontal: 24,
     marginBottom: 30,
-    shadowColor: '#00ffcc',
+    shadowColor: SECONDARY_COLOUR,
     shadowOpacity: 0.4,
     shadowRadius: 15,
     elevation: 8,
   },
   qiblaCardText: {
-    color: '#00ffcc',
+    color: SECONDARY_COLOUR,
     fontSize: 18,
     fontWeight: '600',
   },
   label: {
     fontSize: 16,
-    color: '#a0a0a0',
+    color: '#cbd5e1',
     marginTop: 10,
   },
   value: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#ffffff',
     marginBottom: 10,
   },
   loader: {
