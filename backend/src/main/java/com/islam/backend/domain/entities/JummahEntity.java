@@ -16,6 +16,7 @@ import java.time.LocalTime;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.ArrayList;
 
 @Data
 @AllArgsConstructor
@@ -56,5 +57,8 @@ public class JummahEntity {
             joinColumns = @JoinColumn(name = "jummah_id"),
             inverseJoinColumns = @JoinColumn(name = "account_id"))
     List<AccountEntity> attendees;
+
+    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MessageEntity> messages = new ArrayList<>();
 
 }

@@ -57,6 +57,7 @@ public class SecurityConfiguration {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
         source.registerCorsConfiguration("/**",configuration);
+        source.registerCorsConfiguration("/ws/**", configuration);  // Allow WebSocket endpoint
 
         return source;
     }

@@ -1,6 +1,6 @@
 package com.islam.backend.security.configs;
 
-import com.islam.backend.security.service.JwtService;
+import com.islam.backend.security.services.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
