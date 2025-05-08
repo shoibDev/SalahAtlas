@@ -2,13 +2,16 @@ package com.islam.backend.controller;
 
 import com.islam.backend.domain.dto.GeolocationDto;
 import com.islam.backend.domain.dto.JummahDto;
+import com.islam.backend.domain.entities.AccountEntity;
 import com.islam.backend.domain.entities.value.Geolocation;
 import com.islam.backend.mapper.impl.GeolocationMapperImpl;
 import com.islam.backend.services.JummahService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,7 +40,12 @@ public class JummahController {
     }
 
     @PostMapping
-    public ResponseEntity<JummahDto> createJummah(@RequestBody JummahDto jummahDto) {
+    public ResponseEntity<JummahDto> createJummah(
+            @AuthenticationPrincipal AccountEntity principal,
+            @RequestBody JummahDto jummahDto) {
+
+        jummahDto.setOrganizerId(principal.getId());
+
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(jummahService.save(jummahDto));
     }
