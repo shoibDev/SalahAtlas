@@ -2,16 +2,11 @@ package com.islam.backend.controller;
 
 import com.islam.backend.domain.dto.GeolocationDto;
 import com.islam.backend.domain.dto.JummahDto;
-import com.islam.backend.domain.entities.AccountEntity;
 import com.islam.backend.domain.entities.value.Geolocation;
 import com.islam.backend.mapper.impl.GeolocationMapperImpl;
-import com.islam.backend.repositories.AccountRepository;
 import com.islam.backend.services.JummahService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,12 +18,10 @@ public class JummahController {
 
     private final JummahService jummahService;
     private final GeolocationMapperImpl geolocationMapper;
-    private final AccountRepository accountRepository;
 
-    public JummahController(JummahService jummahService, GeolocationMapperImpl geolocationMapper, AccountRepository accountRepository) {
+    public JummahController(JummahService jummahService, GeolocationMapperImpl geolocationMapper) {
         this.jummahService = jummahService;
         this.geolocationMapper = geolocationMapper;
-        this.accountRepository = accountRepository;
     }
 
     @GetMapping
@@ -44,11 +37,7 @@ public class JummahController {
     }
 
     @PostMapping
-    public ResponseEntity<JummahDto> createJummah(@RequestBody JummahDto jummahDto, @AuthenticationPrincipal AccountEntity principal) {
-        // Set the organizer ID using the authenticated principal
-        jummahDto.setOrganizerId(principal.getId());
-        jummahDto.setVerified(false);
-
+    public ResponseEntity<JummahDto> createJummah(@RequestBody JummahDto jummahDto) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(jummahService.save(jummahDto));
     }

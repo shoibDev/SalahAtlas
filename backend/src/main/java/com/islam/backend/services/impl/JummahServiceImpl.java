@@ -7,7 +7,6 @@ import com.islam.backend.domain.entities.value.Geolocation;
 import com.islam.backend.mapper.impl.JummahMapperImpl;
 import com.islam.backend.repositories.AccountRepository;
 import com.islam.backend.repositories.JummahRepository;
-import com.islam.backend.repositories.MessageRepository;
 import com.islam.backend.services.JummahService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,13 +21,11 @@ public class JummahServiceImpl implements JummahService {
 
     private final JummahRepository jummahRepository;
     private final AccountRepository accountRepository;
-    private final MessageRepository messageRepository;
     private final JummahMapperImpl jummahMapper;
 
-    public JummahServiceImpl(JummahRepository jummahRepository, AccountRepository accountRepository, MessageRepository messageRepository, JummahMapperImpl jummahMapper) {
+    public JummahServiceImpl(JummahRepository jummahRepository, AccountRepository accountRepository,JummahMapperImpl jummahMapper) {
         this.jummahRepository = jummahRepository;
         this.accountRepository = accountRepository;
-        this.messageRepository = messageRepository;
         this.jummahMapper = jummahMapper;
     }
 

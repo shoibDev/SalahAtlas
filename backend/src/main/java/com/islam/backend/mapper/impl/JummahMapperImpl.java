@@ -3,10 +3,8 @@ package com.islam.backend.mapper.impl;
 import com.islam.backend.domain.dto.JummahDto;
 import com.islam.backend.domain.entities.AccountEntity;
 import com.islam.backend.domain.entities.JummahEntity;
-import com.islam.backend.domain.entities.MessageEntity;
 import com.islam.backend.mapper.Mapper;
 import com.islam.backend.repositories.AccountRepository;
-import com.islam.backend.repositories.MessageRepository;
 import jakarta.annotation.PostConstruct;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
@@ -21,13 +19,11 @@ public class JummahMapperImpl implements Mapper<JummahEntity, JummahDto> {
 
     private final ModelMapper modelMapper;
     private final AccountRepository accountRepository;
-    private final MessageRepository messageRepository;
     private final GeolocationMapperImpl geolocationMapper;
 
-    public JummahMapperImpl(ModelMapper modelMapper, AccountRepository accountRepository, MessageRepository messageRepository, GeolocationMapperImpl geolocationMapper) {
+    public JummahMapperImpl(ModelMapper modelMapper, AccountRepository accountRepository, GeolocationMapperImpl geolocationMapper) {
         this.modelMapper = modelMapper;
         this.accountRepository = accountRepository;
-        this.messageRepository = messageRepository;
         this.geolocationMapper = geolocationMapper;
     }
 
@@ -59,12 +55,6 @@ public class JummahMapperImpl implements Mapper<JummahEntity, JummahDto> {
                                         .map(Enum::name)
                                         .orElse(null),
                                 JummahDto::setGenderTarget
-                        );
-                        mapper.map(
-                                src -> Optional.ofNullable(src.getMessages())
-                                        .orElse(List.of())
-                                        .stream().map(MessageEntity::getId).toList(),
-                                JummahDto::setMessageIds
                         );
                     });
         }
@@ -101,12 +91,6 @@ public class JummahMapperImpl implements Mapper<JummahEntity, JummahDto> {
             jummahEntity.setGeolocation(geolocationMapper.mapFrom(jummahDto.getGeolocation()));
         }
 
-        if(jummahDto.getMessageIds() != null) {
-            List<MessageEntity> messages = StreamSupport
-                    .stream(messageRepository.findAllById(jummahDto.getMessageIds()).spliterator(), false)
-                    .collect(Collectors.toList());
-            jummahEntity.setMessages(messages);
-        }
 
         return jummahEntity;
     }
