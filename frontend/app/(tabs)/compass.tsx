@@ -12,7 +12,7 @@ import * as Haptics from 'expo-haptics';
 import { getQiblaDirection } from '@/utils/qibla';
 
 const COMPASS_SIZE = 250;
-const MARKER_SIZE = 16;
+const MARKER_SIZE = 24;
 
 export default function CompassScreen() {
   const [heading, setHeading] = useState(0);
@@ -97,7 +97,7 @@ export default function CompassScreen() {
   if (loading || qiblaDirection === null) {
     return (
         <View style={styles.loader}>
-          <ActivityIndicator size="large" />
+          <ActivityIndicator size="large" color="#00ffcc" />
         </View>
     );
   }
@@ -111,114 +111,124 @@ export default function CompassScreen() {
 
   return (
       <View style={styles.container}>
-        <Text style={styles.title}>Qibla Compass</Text>
+        <Text style={styles.header}>Qibla Direction</Text>
 
-        <View style={styles.compassContainer}>
-          <View style={styles.compassBase} />
-
-          <Animated.View
-              style={[
-                styles.marker,
-                {
-                  transform: [{ scale: scaleAnim }],
-                  left: COMPASS_SIZE / 2 + markerX - MARKER_SIZE / 2,
-                  top: COMPASS_SIZE / 2 + markerY - MARKER_SIZE / 2,
-                  shadowColor: isExactQibla ? '#00ffcc' : 'transparent',
-                  shadowOpacity: isExactQibla ? 1 : 0,
-                  shadowRadius: isExactQibla ? 15 : 0,
-                  shadowOffset: { width: 0, height: 0 },
-                },
-              ]}
-          />
+        <View style={styles.glowCircleWrapper}>
+          <View style={styles.compassRing}>
+            <Animated.View
+                style={[
+                  styles.qiblaMarker,
+                  {
+                    transform: [{ scale: scaleAnim }],
+                    left: COMPASS_SIZE / 2 + markerX - MARKER_SIZE / 2,
+                    top: COMPASS_SIZE / 2 + markerY - MARKER_SIZE / 2,
+                    shadowColor: isExactQibla ? '#6d95e7' : 'transparent',
+                    shadowOpacity: isExactQibla ? 1 : 0,
+                    shadowRadius: isExactQibla ? 12 : 0,
+                  },
+                ]}
+            />
+          </View>
         </View>
 
-        {isExactQibla && (
-            <View style={styles.qiblaHighlight}>
-              <Text style={styles.qiblaText}>You're Facing Qibla 🕋</Text>
-            </View>
-        )}
+        <View style={styles.infoContainer}>
 
-        <Text style={styles.headingText}>Your Heading: {Math.round(heading)}°</Text>
-        <Text style={styles.directionText}>
-          Qibla is {Math.round(qiblaDirection)}° from Magnetic North
-        </Text>
+          <Text style={styles.label}>Your Heading</Text>
+          <Text style={styles.value}>{Math.round(heading)}°</Text>
+
+          <Text style={styles.label}>Qibla From North</Text>
+          <Text style={styles.value}>{Math.round(qiblaDirection)}°</Text>
+        </View>
       </View>
   );
 }
 
+const PRIMARY_COLOUR = '#1f2937';
+const SECONDARY_COLOUR = '#133383';
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0b0c10',
+    backgroundColor: PRIMARY_COLOUR,
+    paddingTop: 150,
+    paddingHorizontal: 20,
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
   },
-  title: {
-    fontSize: 28,
-    color: 'white',
+  header: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#ffffff',
+    marginBottom: 16,
+    letterSpacing: 0.5,
+    textAlign: 'center',
+  },
+  glowCircleWrapper: {
+    shadowColor: SECONDARY_COLOUR,
+    shadowOpacity: 0.3,
+    shadowRadius: 50,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 12,
     marginBottom: 40,
   },
-  compassContainer: {
-    width: COMPASS_SIZE,
-    height: COMPASS_SIZE,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  compassBase: {
+  compassRing: {
     width: COMPASS_SIZE,
     height: COMPASS_SIZE,
     borderRadius: COMPASS_SIZE / 2,
-    borderWidth: 4,
-    borderColor: '#1e90ff',
-    backgroundColor: '#121417',
-    position: 'absolute',
-    shadowColor: '#1e90ff',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 15,
+    backgroundColor: '#1e293b', // subtle inner ring
+    borderWidth: 3,
+    borderColor: SECONDARY_COLOUR,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
   },
-  marker: {
+  qiblaMarker: {
     position: 'absolute',
     width: MARKER_SIZE,
     height: MARKER_SIZE,
     borderRadius: MARKER_SIZE / 2,
-    backgroundColor: 'green',
+    backgroundColor: SECONDARY_COLOUR,
     borderWidth: 2,
-    borderColor: 'white',
+    borderColor: '#ffffff',
+    shadowColor: SECONDARY_COLOUR,
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
+    elevation: 10,
   },
-  headingText: {
-    marginTop: 20,
+  infoContainer: {
+    alignItems: 'center',
+  },
+  qiblaCard: {
+    backgroundColor: 'rgba(19, 51, 131, 0.15)',
+    borderColor: SECONDARY_COLOUR,
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    marginBottom: 30,
+    shadowColor: SECONDARY_COLOUR,
+    shadowOpacity: 0.4,
+    shadowRadius: 15,
+    elevation: 8,
+  },
+  qiblaCardText: {
+    color: SECONDARY_COLOUR,
     fontSize: 18,
-    color: '#ddd',
+    fontWeight: '600',
   },
-  directionText: {
-    marginTop: 10,
-    color: '#aaa',
+  label: {
     fontSize: 16,
+    color: '#cbd5e1',
+    marginTop: 10,
+  },
+  value: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginBottom: 10,
   },
   loader: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  qiblaHighlight: {
-    marginTop: 30,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    backgroundColor: '#00ffcc22',
-    borderColor: '#00ffcc',
-    borderWidth: 2,
-    borderRadius: 12,
-    shadowColor: '#00ffcc',
-    shadowOpacity: 0.9,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 0 },
-  },
-  qiblaText: {
-    color: '#00ffcc',
-    fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
   },
 });

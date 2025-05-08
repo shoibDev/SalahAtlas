@@ -1,6 +1,5 @@
-package com.islam.backend.domain.entities.value;
+package com.islam.backend.domain.dto;
 
-import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,8 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Embeddable
-public class Geolocation {
+public class GeolocationDto {
     private double latitude;
     private double longitude;
 }

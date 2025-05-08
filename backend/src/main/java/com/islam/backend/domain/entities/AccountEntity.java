@@ -2,6 +2,7 @@ package com.islam.backend.domain.entities;
 
 
 import com.islam.backend.domain.entities.value.Geolocation;
+import com.islam.backend.enums.Gender;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -40,11 +41,20 @@ public class AccountEntity implements UserDetails {
     @Column(nullable = false)
     private String lastName;
 
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
+
     @CreatedDate
     private LocalDateTime createdAt;
 
     @Embedded
     private Geolocation geolocation;
+
+    @OneToMany(mappedBy = "organizer")
+    private List<JummahEntity> organizedJummahs;
+
+    @ManyToMany(mappedBy = "attendees")
+    private List<JummahEntity> attendingJummahs;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
