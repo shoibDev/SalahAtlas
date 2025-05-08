@@ -25,4 +25,5 @@ public class JummahDto {
     private UUID organizerId;
     private List<UUID> attendeeIds;
     private GeolocationDto geolocation;
+    private List<UUID> messageIds;
 }

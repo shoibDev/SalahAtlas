@@ -1,4 +1,4 @@
-package com.islam.backend.security.service;
+package com.islam.backend.security.services;
 
 import com.islam.backend.domain.entities.AccountEntity;
 import com.islam.backend.repositories.AccountRepository;
