@@ -1,7 +1,9 @@
 package com.islam.backend.mapper;
 
-public interface Mapper<A, B> {
-    B mapTo(A a);
+public interface Mapper<E, D> {
+    D mapTo(E e);
 
-    A mapFrom(B b);
+    default E mapFrom(D data) {
+        throw new UnsupportedOperationException("mapFrom not supported");
+    }
 }
