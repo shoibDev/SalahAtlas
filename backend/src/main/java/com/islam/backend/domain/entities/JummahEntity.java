@@ -9,11 +9,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.sql.Time;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,6 +22,7 @@ import java.util.UUID;
 @Builder
 @Entity
 @Table(name = "jummahs")
+@EntityListeners(AuditingEntityListener.class)
 public class JummahEntity {
 
     @Id
@@ -30,31 +30,41 @@ public class JummahEntity {
     private UUID id;
 
     @CreatedDate
+    @Column(nullable = false, updatable = false)
     private LocalDate date;
 
+    @Column(nullable = false)
     private LocalTime time;
+
+    @Column(columnDefinition = "TEXT")
+    private String notes;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Gender genderTarget;
 
     @Embedded
     private Geolocation geolocation;
 
-    private String notes;
-
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private PrayerTime prayerTime;
 
-    @Enumerated(EnumType.STRING)
-    private Gender genderTarget;
-
-    private boolean verified;
-
-    @ManyToOne
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "organizer_id")
     AccountEntity organizer;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "jummahs_attendees",
             joinColumns = @JoinColumn(name = "jummah_id"),
             inverseJoinColumns = @JoinColumn(name = "account_id"))
     List<AccountEntity> attendees;
+
+    @PrePersist
+    public void prePersist() {
+        if (date == null) {
+            date = LocalDate.now();
+        }
+    }
 
 }
