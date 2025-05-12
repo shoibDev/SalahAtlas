@@ -1,11 +1,13 @@
 package com.islam.backend.security.controller;
 
 import com.islam.backend.domain.entities.AccountEntity;
-import com.islam.backend.security.dto.AccountLoginDto;
-import com.islam.backend.security.dto.AccountRegisterDto;
-import com.islam.backend.security.dto.LoginResponseDto;
+import com.islam.backend.security.dto.request.AccountLoginRequest;
+import com.islam.backend.security.dto.request.AccountRegisterRequest;
+import com.islam.backend.security.dto.response.AccountLoginResponse;
 import com.islam.backend.security.services.AuthenticationService;
 import com.islam.backend.security.services.JwtService;
+import com.islam.backend.security.user.AppUserDetails;
+import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,47 +21,47 @@ public class AuthenticationController {
     private final JwtService jwtService;
     private final AuthenticationService authenticationService;
     private final UserDetailsService userDetailsService;
+    private final ModelMapper modelMapper;
 
     public AuthenticationController(
             JwtService jwtService,
             AuthenticationService authenticationService,
-            UserDetailsService userDetailsService
+            UserDetailsService userDetailsService,
+            ModelMapper modelMapper
     ) {
         this.jwtService = jwtService;
         this.authenticationService = authenticationService;
         this.userDetailsService = userDetailsService;
+        this.modelMapper = modelMapper;
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<AccountRegisterDto> register(@RequestBody AccountRegisterDto accountRegisterDto) {
-        AccountEntity registeredUser = authenticationService.signup(accountRegisterDto);
+    public ResponseEntity<AccountRegisterRequest> register(
+            @RequestBody AccountRegisterRequest request) {
 
-        AccountRegisterDto response = AccountRegisterDto.builder()
-                .email(registeredUser.getEmail())
-                .password(registeredUser.getPassword())
-                .firstName(registeredUser.getFirstName())
-                .lastName(registeredUser.getLastName())
-                .build();
+        AccountEntity registeredUser = authenticationService.signup(request);
+        AccountRegisterRequest response = modelMapper.map(registeredUser, AccountRegisterRequest.class);
 
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDto> authenticate(@RequestBody AccountLoginDto accountLoginDto) {
-        AccountEntity authenticatedUser = authenticationService.authenticate(accountLoginDto);
+    public ResponseEntity<AccountLoginResponse> authenticate(@RequestBody AccountLoginRequest request) {
+        AppUserDetails authenticatedUser = authenticationService.authenticate(request);
 
         String jwtToken = jwtService.generateAccessToken(authenticatedUser);
         String refreshToken = jwtService.generateRefreshToken(authenticatedUser);
 
-        LoginResponseDto loginResponse = LoginResponseDto.builder()
+        AccountLoginResponse loginResponse = AccountLoginResponse.builder()
                 .accessToken(jwtToken)
                 .refreshToken(refreshToken)
                 .build();
+
         return ResponseEntity.ok(loginResponse);
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<LoginResponseDto> refreshToken(
+    public ResponseEntity<AccountLoginResponse> refreshToken(
             @RequestHeader("Authorization") String refreshTokenHeader
     ) {
         if (refreshTokenHeader == null || !refreshTokenHeader.startsWith("Bearer ")) {
@@ -79,7 +81,7 @@ public class AuthenticationController {
         String newRefreshToken = jwtService.generateRefreshToken(userDetails);
 
         return ResponseEntity.ok(
-                LoginResponseDto.builder()
+                AccountLoginResponse.builder()
                         .accessToken(newAccessToken)
                         .refreshToken(newRefreshToken)
                         .build()

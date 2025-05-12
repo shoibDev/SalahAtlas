@@ -5,13 +5,12 @@ import com.islam.backend.domain.dto.JummahDto;
 import com.islam.backend.domain.entities.AccountEntity;
 import com.islam.backend.domain.entities.value.Geolocation;
 import com.islam.backend.mapper.impl.GeolocationMapperImpl;
-import com.islam.backend.services.JummahService;
+import com.islam.backend.services.jummah.JummahService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
 

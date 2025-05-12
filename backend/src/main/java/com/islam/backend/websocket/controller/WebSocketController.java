@@ -5,7 +5,7 @@ import com.islam.backend.domain.entities.ChatMessageEntity;
 import com.islam.backend.domain.entities.JummahEntity;
 import com.islam.backend.mapper.ChatMessageMapper;
 import com.islam.backend.repositories.JummahRepository;
-import com.islam.backend.services.JummahService;
+import com.islam.backend.services.jummah.JummahService;
 import com.islam.backend.websocket.services.ChatMessageService;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;

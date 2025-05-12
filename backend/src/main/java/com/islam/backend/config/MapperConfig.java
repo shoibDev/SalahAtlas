@@ -1,7 +1,9 @@
 package com.islam.backend.config;
 
+import com.islam.backend.domain.dto.jummah.request.JummahCreateRequest;
 import com.islam.backend.domain.entities.AccountEntity;
 import com.islam.backend.domain.entities.JummahEntity;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,6 +16,12 @@ public class MapperConfig {
     @Bean
     public ModelMapper modelMapper() {
         ModelMapper modelMapper = new ModelMapper();
+
+        // Prevent accessing lazy collections like JummahEntity
+        modelMapper.getConfiguration().setPropertyCondition(context ->
+                !(context.getSource() instanceof PersistentCollection)
+        );
+
         if (modelMapper.getTypeMap(AccountEntity.class, UUID.class) == null) {
                 modelMapper.createTypeMap(AccountEntity.class, UUID.class)
                     .setConverter(ctx -> ctx.getSource().getId());
@@ -22,6 +30,9 @@ public class MapperConfig {
             modelMapper.createTypeMap(JummahEntity.class, UUID.class)
                 .setConverter(ctx -> ctx.getSource().getId());
         }
+
+
+
         return modelMapper;
     }
 }

@@ -1,4 +1,4 @@
-package com.islam.backend.services;
+package com.islam.backend.services.jummah;
 
 import com.islam.backend.domain.dto.JummahDto;
 import com.islam.backend.domain.entities.value.Geolocation;

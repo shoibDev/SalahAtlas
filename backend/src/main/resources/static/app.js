@@ -1,7 +1,7 @@
 let stompClient = null;
 let sender = null;
-const jummahId = "95f17a16-efec-426e-9153-df9d1b7e957b";
-const bearerToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0QGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ3MDEyMDMwLCJleHAiOjE3NDcwOTg0MzB9.nSD4-hGHaz4BK5KYw2owYUi2gWepeZcjNJA7uBN6U54";
+const jummahId = "02ae234c-64cc-429c-ae4e-374cff960194";
+const bearerToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0QGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ3MDc2OTM5LCJleHAiOjE3NDcxNjMzMzl9.Xp8KBqcrQ7cc0ULDJleeQrVPVY-NfN4XPZPwTj_Baow";
 
 async function enterChat() {
     sender = document.getElementById("username").value.trim();

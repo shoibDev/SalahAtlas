@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -22,32 +23,42 @@ import java.util.UUID;
 @Builder
 @Entity
 @Table(name = "jummahs")
+@EntityListeners(AuditingEntityListener.class)
 public class JummahEntity {
+
+    @PrePersist
+    public void prePersist() {
+        if (date == null) {
+            date = LocalDate.now();
+        }
+    }
 
     @Id
     @GeneratedValue
     private UUID id;
 
     @CreatedDate
+    @Column(nullable = false, updatable = false)
     private LocalDate date;
 
+    @Column(nullable = false)
     private LocalTime time;
 
     @Embedded
     private Geolocation geolocation;
 
+    @Column(columnDefinition = "TEXT")
     private String notes;
 
     @Enumerated(EnumType.STRING)
     private PrayerTime prayerTime;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Gender genderTarget;
 
-    private boolean verified;
-
-    @OneToOne
-    @JoinColumn(name = "organizer_id")
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organizer_id", referencedColumnName = "id")
     AccountEntity organizer;
 
     @ManyToMany
