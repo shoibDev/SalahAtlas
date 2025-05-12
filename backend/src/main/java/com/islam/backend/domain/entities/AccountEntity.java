@@ -1,7 +1,6 @@
 package com.islam.backend.domain.entities;
 
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.islam.backend.domain.entities.value.Geolocation;
 import com.islam.backend.enums.Gender;
 import jakarta.persistence.*;
@@ -10,7 +9,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -25,7 +23,6 @@ import java.util.UUID;
 @Builder
 @Entity
 @Table(name = "accounts")
-@EntityListeners(AuditingEntityListener.class)
 public class AccountEntity implements UserDetails {
 
     @Id
@@ -35,7 +32,6 @@ public class AccountEntity implements UserDetails {
     @Column(unique = true)
     private String email;
 
-    @JsonIgnore
     @Column(nullable = false)
     private String password;
 
@@ -46,29 +42,22 @@ public class AccountEntity implements UserDetails {
     private String lastName;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Gender gender;
 
     @CreatedDate
     private LocalDateTime createdAt;
 
-    @JsonIgnore
     @Embedded
     private Geolocation geolocation;
 
-    @Column(nullable = false)
     private boolean verified;
 
     @OneToOne(mappedBy = "organizer")
     private JummahEntity organizedJummah;
 
-    @ManyToMany(mappedBy = "attendees", fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "attendees")
     private List<JummahEntity> attendingJummahs;
-
-    private boolean accountNonExpired = true;
-    private boolean accountNonLocked = true;
-    private boolean credentialsNonExpired = true;
-    private boolean enabled = true;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -87,21 +76,21 @@ public class AccountEntity implements UserDetails {
 
     @Override
     public boolean isAccountNonExpired() {
-        return accountNonExpired;
+        return UserDetails.super.isAccountNonExpired();
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return accountNonLocked;
+        return UserDetails.super.isAccountNonLocked();
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return credentialsNonExpired;
+        return UserDetails.super.isCredentialsNonExpired();
     }
 
     @Override
     public boolean isEnabled() {
-        return enabled;
+        return UserDetails.super.isEnabled();
     }
 }

@@ -2,12 +2,12 @@ package com.islam.backend.mapper.impl;
 
 import com.islam.backend.domain.dto.GeolocationDto;
 import com.islam.backend.domain.entities.value.Geolocation;
-import com.islam.backend.mapper.Mapper;
+import com.islam.backend.mapper.GeolocationMapper;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 
 @Component
-public class GeolocationMapperImpl implements Mapper<Geolocation, GeolocationDto> {
+public class GeolocationMapperImpl implements GeolocationMapper {
 
     private final ModelMapper modelMapper;
 

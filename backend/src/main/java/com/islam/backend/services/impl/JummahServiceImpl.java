@@ -1,54 +1,69 @@
-package com.islam.backend.services.jummah.impl;
+package com.islam.backend.services.impl;
 
+import com.islam.backend.domain.dto.JummahDto;
 import com.islam.backend.domain.entities.AccountEntity;
 import com.islam.backend.domain.entities.JummahEntity;
 import com.islam.backend.domain.entities.value.Geolocation;
-import com.islam.backend.domain.response.JummahDetailResponse;
-import com.islam.backend.domain.response.JummahMapResponse;
-import com.islam.backend.enums.Gender;
-import com.islam.backend.mapper.impl.JummahDetailMapperImpl;
-import com.islam.backend.mapper.impl.JummahMapMapperImpl;
+import com.islam.backend.mapper.impl.JummahMapperImpl;
 import com.islam.backend.repositories.AccountRepository;
 import com.islam.backend.repositories.JummahRepository;
-import com.islam.backend.services.jummah.JummahPublicService;
+import com.islam.backend.services.JummahService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-public class JummahPublicServiceImpl implements JummahPublicService {
+public class JummahServiceImpl implements JummahService {
 
     private final JummahRepository jummahRepository;
     private final AccountRepository accountRepository;
-    private final JummahMapMapperImpl jummahMapMapper;
-    private final JummahDetailMapperImpl jummahDetailMapper;
+    private final JummahMapperImpl jummahMapper;
 
-    public JummahPublicServiceImpl(JummahRepository jummahRepository,
-                                   JummahMapMapperImpl jummahMapMapper,
-                                   JummahDetailMapperImpl jummahDetailMapper,
-                                   AccountRepository accountRepository) {
+    public JummahServiceImpl(JummahRepository jummahRepository, AccountRepository accountRepository,JummahMapperImpl jummahMapper) {
         this.jummahRepository = jummahRepository;
-        this.jummahMapMapper = jummahMapMapper;
-        this.jummahDetailMapper = jummahDetailMapper;
         this.accountRepository = accountRepository;
-    }
-
-    public List<JummahMapResponse> findAllForMap(AccountEntity user) {
-        Gender userGender = user.getGender();
-
-        return jummahRepository.findAll().stream()
-                .filter(j -> j.getGenderTarget() == null || j.getGenderTarget() == userGender)
-                .map(jummahMapMapper::mapTo)
-                .toList();
+        this.jummahMapper = jummahMapper;
     }
 
     @Override
-    public List<JummahMapResponse> findNearbyForMap(Geolocation geolocation, double radiusInKm) {
+    @Transactional
+    public JummahDto save(JummahDto jummahDto) {
+        JummahEntity jummahEntity = jummahMapper.mapFrom(jummahDto);
+
+        JummahEntity savedEntity = jummahRepository.save(jummahEntity);
+        return jummahMapper.mapTo(savedEntity);
+    }
+
+    @Override
+    public List<JummahDto> findAll() {
+        return jummahRepository.findAll().stream()
+                .map(jummahMapper::mapTo)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<JummahDto> findById(UUID id) {
+        return jummahRepository.findById(id)
+                .map(jummahMapper::mapTo);
+    }
+
+    @Override
+    public boolean existsById(UUID id) {
+        return jummahRepository.existsById(id);
+    }
+
+    @Override
+    @Transactional
+    public void deleteById(UUID id) {
+        jummahRepository.deleteById(id);
+    }
+
+    @Override
+    public List<JummahDto> findNearby(Geolocation geolocation, double radiusInKm) {
         // Calculate distance using Haversine formula
         // For simplicity, we'll fetch all and filter in memory
         // In a production environment, this should be done with a spatial database query
@@ -65,13 +80,8 @@ public class JummahPublicServiceImpl implements JummahPublicService {
                     double distance = calculateDistance(lat1, lon1, lat2, lon2);
                     return distance <= radiusInKm;
                 })
-                .map(jummahMapMapper::mapTo)
+                .map(jummahMapper::mapTo)
                 .collect(Collectors.toList());
-    }
-
-    @Override
-    public Optional<JummahDetailResponse> findDetailById(UUID id) {
-        return jummahRepository.findById(id).map(jummahDetailMapper::mapTo);
     }
 
     @Override
@@ -85,7 +95,7 @@ public class JummahPublicServiceImpl implements JummahPublicService {
             AccountEntity account = accountOpt.get();
 
             if (jummah.getAttendees() == null || !jummah.getAttendees().contains(account)) {
-                Objects.requireNonNull(jummah.getAttendees()).add(account);
+                jummah.getAttendees().add(account);
                 jummahRepository.save(jummah);
                 return true;
             }
@@ -113,21 +123,12 @@ public class JummahPublicServiceImpl implements JummahPublicService {
     }
 
     @Override
-    public boolean deleteById(UUID id, AccountEntity currentUser) {
-        Optional<JummahEntity> jummahOpt = jummahRepository.findById(id);
-
-        if (jummahOpt.isPresent()) {
-            JummahEntity jummah = jummahOpt.get();
-
-            // Check if the current user is the organizer
-            if (jummah.getOrganizer() != null && 
-                jummah.getOrganizer().getId().equals(currentUser.getId())) {
-                jummahRepository.deleteById(id);
-                return true;
-            }
-        }
-
-        return false;
+    public List<JummahDto> findByOrganizerId(UUID organizerId) {
+        return jummahRepository.findAll().stream()
+                .filter(jummah -> jummah.getOrganizer() != null && 
+                        jummah.getOrganizer().getId().equals(organizerId))
+                .map(jummahMapper::mapTo)
+                .collect(Collectors.toList());
     }
 
     // Haversine formula to calculate distance between two points on Earth

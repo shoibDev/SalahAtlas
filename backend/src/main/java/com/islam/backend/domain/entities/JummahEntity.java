@@ -1,5 +1,6 @@
 package com.islam.backend.domain.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.islam.backend.domain.entities.value.Geolocation;
 import com.islam.backend.enums.Gender;
 import com.islam.backend.enums.PrayerTime;
@@ -9,7 +10,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -22,7 +22,6 @@ import java.util.UUID;
 @Builder
 @Entity
 @Table(name = "jummahs")
-@EntityListeners(AuditingEntityListener.class)
 public class JummahEntity {
 
     @Id
@@ -30,41 +29,35 @@ public class JummahEntity {
     private UUID id;
 
     @CreatedDate
-    @Column(nullable = false, updatable = false)
     private LocalDate date;
 
-    @Column(nullable = false)
     private LocalTime time;
-
-    @Column(columnDefinition = "TEXT")
-    private String notes;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Gender genderTarget;
 
     @Embedded
     private Geolocation geolocation;
 
+    private String notes;
+
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private PrayerTime prayerTime;
 
-    @OneToOne(fetch = FetchType.EAGER)
+    @Enumerated(EnumType.STRING)
+    private Gender genderTarget;
+
+    private boolean verified;
+
+    @OneToOne
     @JoinColumn(name = "organizer_id")
     AccountEntity organizer;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany
     @JoinTable(name = "jummahs_attendees",
             joinColumns = @JoinColumn(name = "jummah_id"),
             inverseJoinColumns = @JoinColumn(name = "account_id"))
     List<AccountEntity> attendees;
 
-    @PrePersist
-    public void prePersist() {
-        if (date == null) {
-            date = LocalDate.now();
-        }
-    }
+    @OneToMany(mappedBy = "jummah", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<ChatMessageEntity> messages;
 
 }
