@@ -34,7 +34,18 @@ public class SecurityConfiguration {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers(
+                                "/auth/**",        // Your login/signup endpoints
+                                "/",               // root
+                                "/index.html",     // static HTML
+                                "/styles.css",     // static CSS
+                                "/app.js",         // JS
+                                "/ws/**",          // if you're using SockJS or STOMP
+                                "/favicon.ico",
+                                "/images/**",      // if you have image folders
+                                "/static/**",      // optional: Spring auto-maps static resources here
+                                "/js/**", "/css/**" // other static folders
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

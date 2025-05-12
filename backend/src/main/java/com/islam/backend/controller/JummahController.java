@@ -1,38 +1,75 @@
 package com.islam.backend.controller;
 
 import com.islam.backend.domain.dto.GeolocationDto;
+import com.islam.backend.domain.dto.JummahDto;
 import com.islam.backend.domain.entities.AccountEntity;
 import com.islam.backend.domain.entities.value.Geolocation;
-import com.islam.backend.domain.response.JummahDetailResponse;
-import com.islam.backend.domain.response.JummahMapResponse;
 import com.islam.backend.mapper.impl.GeolocationMapperImpl;
-import com.islam.backend.services.jummah.JummahPublicService;
+import com.islam.backend.services.JummahService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/jummahs")
 public class JummahController {
 
-    private final JummahPublicService jummahPublicService;
+    private final JummahService jummahService;
     private final GeolocationMapperImpl geolocationMapper;
 
-    public JummahController(JummahPublicService jummahPublicService, GeolocationMapperImpl geolocationMapper) {
-        this.jummahPublicService = jummahPublicService;
+    public JummahController(JummahService jummahService, GeolocationMapperImpl geolocationMapper) {
+        this.jummahService = jummahService;
         this.geolocationMapper = geolocationMapper;
     }
 
-    /**
-     * Return a lightweight list of nearby jummahs for the map
-     */
+    @GetMapping
+    public ResponseEntity<List<JummahDto>> getAllJummahs() {
+        return ResponseEntity.ok(jummahService.findAll());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<JummahDto> getJummahById(@PathVariable UUID id) {
+        return jummahService.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping
+    public ResponseEntity<JummahDto> createJummah(
+            @AuthenticationPrincipal AccountEntity principal,
+            @RequestBody JummahDto jummahDto) {
+
+        jummahDto.setOrganizerId(principal.getId());
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(jummahService.save(jummahDto));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<JummahDto> updateJummah(@PathVariable UUID id, @RequestBody JummahDto jummahDto) {
+        if (!jummahService.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        jummahDto.setId(id);
+        return ResponseEntity.ok(jummahService.save(jummahDto));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteJummah(@PathVariable UUID id) {
+        if (!jummahService.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        jummahService.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/nearby")
-    public ResponseEntity<List<JummahMapResponse>> getNearbyJummahs(
+    public ResponseEntity<List<JummahDto>> getNearbyJummahs(
             @RequestParam double latitude,
             @RequestParam double longitude,
             @RequestParam(defaultValue = "10.0") double radiusInKm) {
@@ -42,66 +79,56 @@ public class JummahController {
                 .longitude(longitude)
                 .build();
 
-        List<JummahMapResponse> nearby = jummahPublicService.findNearbyForMap(geolocation, radiusInKm);
-        return ResponseEntity.ok(nearby);
+        return ResponseEntity.ok(jummahService.findNearby(geolocation, radiusInKm));
     }
 
-    /**
-     * Return all jummahs in lightweight format (for public listing/map)
-     */
-    @GetMapping("/map")
-    public ResponseEntity<List<JummahMapResponse>> getAllForMap(@AuthenticationPrincipal AccountEntity principal) {
+    @PatchMapping("/{id}/geolocation")
+    public ResponseEntity<JummahDto> updateGeolocation(
+            @PathVariable UUID id,
+            @RequestBody GeolocationDto geolocationDto) {
 
-        return ResponseEntity.ok(jummahPublicService.findAllForMap(principal));
+        if (!jummahService.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return jummahService.findById(id)
+                .map(jummahDto -> {
+                    jummahDto.setGeolocation(geolocationDto);
+                    return ResponseEntity.ok(jummahService.save(jummahDto));
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    /**
-     * Return full jummah detail when user clicks a pin
-     */
-    @GetMapping("/{id}")
-    public ResponseEntity<JummahDetailResponse> getDetail(@PathVariable UUID id) {
-        Optional<JummahDetailResponse> detail = jummahPublicService.findDetailById(id);
-        return detail.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    /**
-     * Add attendee to a jummah
-     */
     @PostMapping("/{jummahId}/attendees/{accountId}")
     public ResponseEntity<Void> addAttendee(
             @PathVariable UUID jummahId,
             @PathVariable UUID accountId) {
 
-        boolean added = jummahPublicService.addAttendee(jummahId, accountId);
-        return added ? ResponseEntity.noContent().build() : ResponseEntity.badRequest().build();
+        boolean added = jummahService.addAttendee(jummahId, accountId);
+
+        if (added) {
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
-    /**
-     * Remove attendee from a jummah
-     */
     @DeleteMapping("/{jummahId}/attendees/{accountId}")
     public ResponseEntity<Void> removeAttendee(
             @PathVariable UUID jummahId,
             @PathVariable UUID accountId) {
 
-        boolean removed = jummahPublicService.removeAttendee(jummahId, accountId);
-        return removed ? ResponseEntity.noContent().build() : ResponseEntity.badRequest().build();
-    }
+        boolean removed = jummahService.removeAttendee(jummahId, accountId);
 
-    /**
-     * Delete a jummah — restricted to the organizer only
-     */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteJummah(
-            @PathVariable UUID id,
-            @AuthenticationPrincipal AccountEntity principal) {
-
-        boolean deleted = jummahPublicService.deleteById(id, principal);
-
-        if (deleted) {
+        if (removed) {
             return ResponseEntity.noContent().build();
         } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return ResponseEntity.badRequest().build();
         }
+    }
+
+    @GetMapping("/organizer/{organizerId}")
+    public ResponseEntity<List<JummahDto>> getJummahsByOrganizer(@PathVariable UUID organizerId) {
+        return ResponseEntity.ok(jummahService.findByOrganizerId(organizerId));
     }
 }
