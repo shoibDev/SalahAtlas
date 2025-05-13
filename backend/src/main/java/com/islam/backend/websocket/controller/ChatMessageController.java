@@ -1,6 +1,6 @@
 package com.islam.backend.websocket.controller;
 
-import com.islam.backend.domain.dto.ChatMessageDto;
+import com.islam.backend.domain.dto.chatmessage.request.ChatMessageRequest;
 import com.islam.backend.domain.entities.ChatMessageEntity;
 import com.islam.backend.mapper.ChatMessageMapper;
 import com.islam.backend.websocket.services.ChatMessageService;
@@ -26,13 +26,13 @@ public class ChatMessageController {
     }
 
     @GetMapping("/jummah/{jummahId}/history")
-    public List<ChatMessageDto> getHistory(@PathVariable UUID jummahId) {
+    public List<ChatMessageRequest> getHistory(@PathVariable UUID jummahId) {
         List<ChatMessageEntity> entities = chatMessageService.getHistoryByJummahId(jummahId).orElse(null);
         if (entities == null) {
             return null;
         }
         return entities.stream()
-                .map(chatMessageMapper::mapTo)
+                .map(chatMessageMapper::toChatMessageResponse)
                 .collect(Collectors.toList());
     }
 
