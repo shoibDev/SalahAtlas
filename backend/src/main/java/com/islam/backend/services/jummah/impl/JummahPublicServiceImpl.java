@@ -7,12 +7,12 @@ import com.islam.backend.domain.dto.jummah.response.JummahMapResponse;
 import com.islam.backend.domain.entities.AccountEntity;
 import com.islam.backend.domain.entities.JummahEntity;
 import com.islam.backend.domain.entities.value.Geolocation;
+import com.islam.backend.exceptions.ResourceNotFoundException;
 import com.islam.backend.mapper.impl.JummahMapperImpl;
 import com.islam.backend.repositories.AccountRepository;
 import com.islam.backend.repositories.JummahRepository;
 import com.islam.backend.security.user.AppUserDetails;
 import com.islam.backend.services.jummah.JummahPublicService;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -48,14 +48,14 @@ public class JummahPublicServiceImpl implements JummahPublicService {
     @Override
     public JummahDetailResponse findById(UUID id) {
         JummahEntity entity = jummahRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Jummah with ID " + id + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Jummah", id));
         return jummahMapper.toDetailResponse(entity);
     }
 
     @Override
     public boolean updateJummah(UUID id, JummahCreateRequest request) {
         JummahEntity entity = jummahRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Jummah with ID " + id + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Jummah", id));
 
         // Update fields from request
         if (request.getTime() != null) {
@@ -80,7 +80,7 @@ public class JummahPublicServiceImpl implements JummahPublicService {
     @Override
     public boolean addAttendee(UUID jummahId, UUID accountId) {
         JummahEntity jummah = jummahRepository.findById(jummahId)
-                .orElseThrow(() -> new EntityNotFoundException("Jummah with ID " + jummahId + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Jummah", jummahId));
 
         // Check if the account is already in the attendees list
         if (jummah.getAttendees() != null && jummah.getAttendees().stream()
@@ -95,7 +95,7 @@ public class JummahPublicServiceImpl implements JummahPublicService {
 
         // Fetch the account entity
         AccountEntity accountEntity = accountRepository.findById(accountId)
-                .orElseThrow(() -> new EntityNotFoundException("Account with ID " + accountId + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Account", accountId));
 
         // Initialize attendees list if null
         if (jummah.getAttendees() == null) {
@@ -112,7 +112,7 @@ public class JummahPublicServiceImpl implements JummahPublicService {
     @Override
     public boolean removeAttendee(UUID jummahId, UUID accountId) {
         JummahEntity jummah = jummahRepository.findById(jummahId)
-                .orElseThrow(() -> new EntityNotFoundException("Jummah with ID " + jummahId + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Jummah", jummahId));
 
         // Check if the account to remove exists in the attendees list
         if (jummah.getAttendees() == null || jummah.getAttendees().stream()
