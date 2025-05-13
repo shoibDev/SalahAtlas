@@ -7,13 +7,14 @@ import com.islam.backend.security.dto.request.AccountLoginRequest;
 import com.islam.backend.security.dto.request.AccountRegisterRequest;
 import com.islam.backend.security.user.AppUserDetails;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AuthenticationService {
 
     private final AccountRepository accountRepository;
