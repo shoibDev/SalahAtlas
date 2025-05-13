@@ -1,11 +1,9 @@
 package com.islam.backend.controller;
 
-import com.islam.backend.domain.dto.AccountDto;
 import com.islam.backend.domain.entities.AccountEntity;
 import com.islam.backend.domain.entities.JummahEntity;
 import com.islam.backend.domain.entities.value.Geolocation;
 import com.islam.backend.repositories.JummahRepository;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 

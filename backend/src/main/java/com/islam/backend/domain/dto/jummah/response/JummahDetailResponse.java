@@ -1,6 +1,5 @@
 package com.islam.backend.domain.dto.jummah.response;
 
-import com.islam.backend.domain.dto.GeolocationDto;
 import com.islam.backend.domain.dto.account.response.AccountPublicResponse;
 import com.islam.backend.enums.PrayerTime;
 import lombok.AllArgsConstructor;

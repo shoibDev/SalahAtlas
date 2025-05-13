@@ -4,9 +4,11 @@ import com.islam.backend.domain.entities.AccountEntity;
 import com.islam.backend.security.dto.request.AccountLoginRequest;
 import com.islam.backend.security.dto.request.AccountRegisterRequest;
 import com.islam.backend.security.dto.response.AccountLoginResponse;
+import com.islam.backend.security.dto.response.AccountRegisterResponse;
 import com.islam.backend.security.services.AuthenticationService;
 import com.islam.backend.security.services.JwtService;
 import com.islam.backend.security.user.AppUserDetails;
+import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,34 +16,25 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
 
-@RequestMapping("/auth")
 @RestController
+@RequestMapping("/auth")
+@AllArgsConstructor
 public class AuthenticationController {
 
     private final JwtService jwtService;
     private final AuthenticationService authenticationService;
     private final UserDetailsService userDetailsService;
-    private final ModelMapper modelMapper;
-
-    public AuthenticationController(
-            JwtService jwtService,
-            AuthenticationService authenticationService,
-            UserDetailsService userDetailsService,
-            ModelMapper modelMapper
-    ) {
-        this.jwtService = jwtService;
-        this.authenticationService = authenticationService;
-        this.userDetailsService = userDetailsService;
-        this.modelMapper = modelMapper;
-    }
 
     @PostMapping("/signup")
-    public ResponseEntity<AccountRegisterRequest> register(
+    public ResponseEntity<AccountRegisterResponse> register(
             @RequestBody AccountRegisterRequest request) {
-
         AccountEntity registeredUser = authenticationService.signup(request);
-        AccountRegisterRequest response = modelMapper.map(registeredUser, AccountRegisterRequest.class);
-
+        AccountRegisterResponse response = AccountRegisterResponse.builder()
+                .email(registeredUser.getEmail())
+                .firstName(registeredUser.getFirstName())
+                .lastName(registeredUser.getLastName())
+                .gender(registeredUser.getGender())
+                .build();
         return ResponseEntity.ok(response);
     }
 

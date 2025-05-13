@@ -1,4 +1,4 @@
-package com.islam.backend.domain.dto;
+package com.islam.backend.domain.dto.chatmessage.request;
 
 import com.islam.backend.enums.MessageType;
 import lombok.AllArgsConstructor;
@@ -13,7 +13,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ChatMessageDto {
+public class ChatMessageRequest {
     private Long id;
     private String sender;
     private String message;

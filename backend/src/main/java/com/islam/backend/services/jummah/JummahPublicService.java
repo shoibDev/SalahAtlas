@@ -25,4 +25,5 @@ public interface JummahPublicService {
 
     void deleteById(UUID id);
 
+    List<JummahMapResponse> findNearbyByRadius(Double latitude, Double longitude, Integer radius);
 }
