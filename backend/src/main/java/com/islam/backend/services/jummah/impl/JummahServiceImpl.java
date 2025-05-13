@@ -1,13 +1,13 @@
-package com.islam.backend.services.impl;
+package com.islam.backend.services.jummah.impl;
 
 import com.islam.backend.domain.dto.JummahDto;
 import com.islam.backend.domain.entities.AccountEntity;
 import com.islam.backend.domain.entities.JummahEntity;
 import com.islam.backend.domain.entities.value.Geolocation;
-import com.islam.backend.mapper.impl.JummahMapperImpl;
+import com.islam.backend.mapper.impl.JummahMapperImpll;
 import com.islam.backend.repositories.AccountRepository;
 import com.islam.backend.repositories.JummahRepository;
-import com.islam.backend.services.JummahService;
+import com.islam.backend.services.jummah.JummahService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,9 +21,9 @@ public class JummahServiceImpl implements JummahService {
 
     private final JummahRepository jummahRepository;
     private final AccountRepository accountRepository;
-    private final JummahMapperImpl jummahMapper;
+    private final JummahMapperImpll jummahMapper;
 
-    public JummahServiceImpl(JummahRepository jummahRepository, AccountRepository accountRepository,JummahMapperImpl jummahMapper) {
+    public JummahServiceImpl(JummahRepository jummahRepository, AccountRepository accountRepository, JummahMapperImpll jummahMapper) {
         this.jummahRepository = jummahRepository;
         this.accountRepository = accountRepository;
         this.jummahMapper = jummahMapper;

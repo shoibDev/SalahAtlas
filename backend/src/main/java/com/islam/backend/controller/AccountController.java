@@ -4,7 +4,7 @@ import com.islam.backend.domain.dto.AccountDto;
 import com.islam.backend.domain.dto.GeolocationDto;
 import com.islam.backend.domain.entities.value.Geolocation;
 import com.islam.backend.mapper.impl.GeolocationMapperImpl;
-import com.islam.backend.services.AccountService;
+import com.islam.backend.services.account.AccountService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

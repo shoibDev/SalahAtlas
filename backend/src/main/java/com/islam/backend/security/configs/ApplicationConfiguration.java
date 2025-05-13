@@ -1,5 +1,6 @@
 package com.islam.backend.security.configs;
 
+import com.islam.backend.security.user.AppUserDetails;
 import com.islam.backend.repositories.AccountRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,6 +23,7 @@ public class ApplicationConfiguration {
     @Bean
     UserDetailsService userDetailsService() {
         return username -> accountRepository.findByEmail(username)
+                .map(AppUserDetails::new)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 

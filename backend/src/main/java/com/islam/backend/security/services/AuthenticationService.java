@@ -2,10 +2,12 @@ package com.islam.backend.security.services;
 
 import com.islam.backend.domain.entities.AccountEntity;
 import com.islam.backend.repositories.AccountRepository;
-import com.islam.backend.security.dto.AccountLoginDto;
-import com.islam.backend.security.dto.AccountRegisterDto;
+import com.islam.backend.security.dto.request.AccountLoginRequest;
+import com.islam.backend.security.dto.request.AccountRegisterRequest;
+import com.islam.backend.security.user.AppUserDetails;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -27,26 +29,30 @@ public class AuthenticationService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public AccountEntity signup(AccountRegisterDto input) {
+    public AccountEntity signup(AccountRegisterRequest request) {
         AccountEntity account = AccountEntity.builder()
-                .email(input.getEmail())
-                .password(passwordEncoder.encode(input.getPassword()))
-                .firstName(input.getFirstName())
-                .lastName(input.getLastName())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .gender(request.getGender())
                 .build();
 
         return accountRepository.save(account);
     }
 
-    public AccountEntity authenticate(AccountLoginDto input) {
+    public AppUserDetails authenticate(AccountLoginRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        input.getEmail(),
-                        input.getPassword()
+                        request.getEmail(),
+                        request.getPassword()
                 )
         );
 
-        return accountRepository.findByEmail(input.getEmail())
-                .orElseThrow();
+        AccountEntity account = accountRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        return new AppUserDetails(account);
     }
+
 }

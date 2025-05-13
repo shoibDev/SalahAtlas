@@ -1,11 +1,11 @@
-package com.islam.backend.services.impl;
+package com.islam.backend.services.account.impl;
 
 import com.islam.backend.domain.dto.AccountDto;
 import com.islam.backend.domain.entities.AccountEntity;
 import com.islam.backend.domain.entities.value.Geolocation;
-import com.islam.backend.mapper.impl.AccountMapperImpl;
+import com.islam.backend.mapper.impl.AccountMapperImpll;
 import com.islam.backend.repositories.AccountRepository;
-import com.islam.backend.services.AccountService;
+import com.islam.backend.services.account.AccountService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,9 +18,9 @@ import java.util.stream.Collectors;
 public class AccountServiceImpl implements AccountService {
 
     private final AccountRepository accountRepository;
-    private final AccountMapperImpl accountMapper;
+    private final AccountMapperImpll accountMapper;
 
-    public AccountServiceImpl(AccountRepository accountRepository, AccountMapperImpl accountMapper) {
+    public AccountServiceImpl(AccountRepository accountRepository, AccountMapperImpll accountMapper) {
         this.accountRepository = accountRepository;
         this.accountMapper = accountMapper;
     }
