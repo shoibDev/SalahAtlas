@@ -1,13 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Dimensions, ActivityIndicator, Alert } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import {
+  StyleSheet,
+  View,
+  Dimensions,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
+import MapView, { Marker, LatLng, Region } from 'react-native-maps';
 import * as Location from 'expo-location';
-import ModelScreen from '../modal';
+import ModalScreen from '../modal';
+import CreateJummahForm from '../../components/forms/CreateJummahForm';
+import { getNearbyJummah } from '@/api/jummahApi';
+import { JummahMapResponse } from '@/types/JummahTypes';
+import JummahMarkerCircle from "@/components/JummahMarkerCircle";
 
 export default function MapScreen() {
-  const [location, setLocation] = useState(null);
+  const [location, setLocation] = useState<Location.LocationObjectCoords | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedCoords, setSelectedCoords] = useState(null);
+  const [selectedCoords, setSelectedCoords] = useState<LatLng | null>(null);
+  const [currentRegion, setCurrentRegion] = useState<Region | null>(null);
+  const [nearbyJummahs, setNearbyJummahs] = useState<JummahMapResponse[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -19,6 +31,22 @@ export default function MapScreen() {
 
       const loc = await Location.getCurrentPositionAsync({});
       setLocation(loc.coords);
+
+      try {
+        // const jummahs = await getNearbyJummah(loc.coords.latitude, loc.coords.longitude);
+        const jummahs = [
+          {
+            id: '7944b79b-46bd-449d-b3ab-298b0d552a03',
+            latitude: 43.433852577433456,
+            longitude: -80.50930431118407,
+            isVerifiedOrganizer: false,
+          },
+        ];
+        setNearbyJummahs(Array.isArray(jummahs) ? jummahs : []);
+      } catch (err) {
+        console.error('Failed to fetch nearby Jummahs', err);
+        Alert.alert('Error', 'Unable to load nearby Jummahs');
+      }
     })();
   }, []);
 
@@ -42,11 +70,20 @@ export default function MapScreen() {
             }}
             showsUserLocation={true}
             showsMyLocationButton={true}
+            onRegionChangeComplete={(region) => setCurrentRegion(region)}
             onLongPress={(event) => {
-              setSelectedCoords(event.nativeEvent.coordinate);
-              setModalVisible(true);
+              if (currentRegion && currentRegion.latitudeDelta < 0.01) {
+                setSelectedCoords(event.nativeEvent.coordinate);
+                setModalVisible(true);
+              } else {
+                Alert.alert(
+                    'Zoom In',
+                    'Please zoom in closer before selecting a location for higher accuracy.'
+                );
+              }
             }}
         >
+          {/* User location marker */}
           <Marker
               coordinate={{
                 latitude: location.latitude,
@@ -54,13 +91,34 @@ export default function MapScreen() {
               }}
               title="You are here"
           />
+
+          {/* Nearby Jummahs */}
+          {Array.isArray(nearbyJummahs) &&
+              nearbyJummahs.map((jummah) => (
+                  <Marker
+                      key={jummah.id}
+                      coordinate={{
+                        latitude: jummah.latitude,
+                        longitude: jummah.longitude,
+                      }}
+                      anchor={{ x: 0.5, y: 0.5 }}
+                  >
+                    <JummahMarkerCircle verified={jummah.isVerifiedOrganizer} />
+                  </Marker>
+
+              ))}
         </MapView>
 
-        <ModelScreen
+        <ModalScreen
             visible={modalVisible}
             onClose={() => setModalVisible(false)}
-            coords={selectedCoords}
-        />
+            title="Create Jummah"
+        >
+          <CreateJummahForm
+              coords={selectedCoords}
+              onClose={() => setModalVisible(false)}
+          />
+        </ModalScreen>
       </View>
   );
 }
