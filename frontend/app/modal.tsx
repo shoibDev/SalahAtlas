@@ -4,7 +4,7 @@ import {
   View,
   Text,
   TouchableOpacity,
-  StyleSheet,
+  StyleSheet, ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -32,7 +32,9 @@ export default function ModalScreen({ visible, onClose, title, children }: Modal
               </TouchableOpacity>
             </View>
 
-            <View style={styles.body}>{children}</View>
+            <ScrollView style={styles.body}>
+              {children}
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -72,5 +74,6 @@ const styles = StyleSheet.create({
   },
   body: {
     padding: 20,
+    maxHeight: '80%',
   },
 });
