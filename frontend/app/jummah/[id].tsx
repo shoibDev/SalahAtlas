@@ -10,8 +10,8 @@ import {
   Platform,
 } from 'react-native';
 import Modal from 'react-native-modal';
-import JummahChat from '@/components/JummahChat';
-import ChatPreview from '@/components/ChatPreview';
+import JummahChat from '@/components/chat/JummahChat';
+import ChatPreview from '@/components/chat/ChatPreview';
 
 export default function JummahDetailScreen() {
   const { jummahId } = useLocalSearchParams();
