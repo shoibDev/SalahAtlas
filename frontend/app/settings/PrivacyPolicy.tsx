@@ -1,13 +1,13 @@
-// app/(tabs)/settings/settings-privacy.tsx
-
 import { View, Text, StyleSheet } from 'react-native';
 
 export default function PrivacyPolicyScreen() {
   return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Privacy Policy</Text>
-        <Text style={styles.content}>This is the Privacy Policy...</Text>
-      </View>
+      <>
+        <View style={styles.container}>
+          <Text style={styles.title}>Privacy Policy</Text>
+          <Text style={styles.content}>This is the Privacy Policy...</Text>
+        </View>
+      </>
   );
 }
 

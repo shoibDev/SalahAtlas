@@ -1,45 +1,53 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { router } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { useRouter } from 'expo-router';
+
+interface SettingItemProps {
+  icon: keyof typeof FontAwesome.glyphMap;
+  label: string;
+  onPress: () => void;
+}
+
+const SettingItem: React.FC<SettingItemProps> = ({ icon, label, onPress }) => (
+    <TouchableOpacity style={styles.settingItem} onPress={onPress}>
+      <View style={styles.itemContent}>
+        <FontAwesome name={icon} size={20} color="#fff" style={styles.icon} />
+        <Text style={styles.itemText}>{label}</Text>
+      </View>
+      <FontAwesome name="angle-right" size={18} color="#aaa" />
+    </TouchableOpacity>
+);
 
 export default function SettingsScreen() {
-  const router = useRouter();
-
-  const SettingItem: ({icon, label, onPress}: { icon: any; label: any; onPress: any }) => React.JSX.Element = ({ icon, label, onPress }) => (
-      <TouchableOpacity style={styles.settingItem} onPress={onPress}>
-        <View style={styles.itemContent}>
-          {/*<FontAwesome name={icon} size={20} color="#fff" style={styles.icon} />*/}
-          <Text style={styles.itemText}>{label}</Text>
-        </View>
-        {/*<FontAwesome name="chevron-forward" size={18} color="#aaa" />*/}
-      </TouchableOpacity>
-  );
-
   return (
       <ScrollView style={styles.container}>
         <View style={styles.logoContainer}>
-          <Image source={require('@/assets/images/brand-banner.png')} style={styles.logo} resizeMode="contain" />
+          <Image
+              source={require('@/assets/images/brand-banner.png')}
+              style={styles.logo}
+              resizeMode="contain"
+          />
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Preferences</Text>
-          {/*<SettingItem icon="moon" label="Theme" onPress={() => navigation.navigate('Theme')} />*/}
-          {/*<SettingItem icon="language" label="Language" onPress={() => navigation.navigate('Language')} />*/}
+          <SettingItem icon="cog" label="Theme" onPress={() => router.push('/settings/Theme')} />
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>General</Text>
-          {/*<SettingItem icon="bell" label="Notifications" onPress={() => navigation.navigate('Notifications')} />*/}
+          <SettingItem icon="bell" label="Notifications" onPress={() => router.push('/settings/Notifications')} />
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Misc</Text>
-          <SettingItem icon="shield-checkmark" label="Privacy Policy" onPress={() => router.push('/PrivacyPolicy')} />
+          <SettingItem icon="shield" label="Privacy Policy" onPress={() => router.push('/settings/PrivacyPolicy')} />
         </View>
       </ScrollView>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

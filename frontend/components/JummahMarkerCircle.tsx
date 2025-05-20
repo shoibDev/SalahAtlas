@@ -1,4 +1,3 @@
-// components/JummahMarkerCircle.tsx
 import React, { useEffect, useRef } from 'react';
 import { Animated, Easing, Image, StyleSheet, View } from 'react-native';
 

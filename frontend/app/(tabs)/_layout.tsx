@@ -2,7 +2,7 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import CustomNavBar from "@/components/CustomNavBar";
 
-export default function _layout() {
+export default function TabsLayout() {
   return (
     <Tabs
         screenOptions={{
@@ -11,8 +11,8 @@ export default function _layout() {
         tabBar={props => <CustomNavBar {...props}/>}
     >
       <Tabs.Screen name={"compass"} options={{ title: 'Compass' }} />
-      <Tabs.Screen name={"dashboard"} options={{ title: 'Dashboard' }} />
-      <Tabs.Screen name={"settings"} options={{ title: 'Settings'}} />
+      <Tabs.Screen name={"index"} options={{ title: 'index' }} />
+      <Tabs.Screen name={"settings"} options={{ title: 'Settings', href: null}} />
     </Tabs>
   );
 }
