@@ -8,11 +8,12 @@ import {
 } from 'react-native';
 import MapView, { Marker, LatLng, Region } from 'react-native-maps';
 import * as Location from 'expo-location';
-import ModalScreen from '../modal';
 import CreateJummahForm from '../../components/forms/CreateJummahForm';
 import { getNearbyJummah } from '@/api/jummahApi';
 import { JummahMapResponse } from '@/types/JummahTypes';
 import JummahMarkerCircle from "@/components/JummahMarkerCircle";
+import { useRouter } from 'expo-router';
+import Modal from 'react-native-modal';
 
 export default function MapScreen() {
   const [location, setLocation] = useState<Location.LocationObjectCoords | null>(null);
@@ -20,6 +21,7 @@ export default function MapScreen() {
   const [selectedCoords, setSelectedCoords] = useState<LatLng | null>(null);
   const [currentRegion, setCurrentRegion] = useState<Region | null>(null);
   const [nearbyJummahs, setNearbyJummahs] = useState<JummahMapResponse[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     (async () => {
@@ -76,14 +78,10 @@ export default function MapScreen() {
                 setSelectedCoords(event.nativeEvent.coordinate);
                 setModalVisible(true);
               } else {
-                Alert.alert(
-                    'Zoom In',
-                    'Please zoom in closer before selecting a location for higher accuracy.'
-                );
+                Alert.alert('Zoom In', 'Please zoom in closer before selecting a location.');
               }
             }}
         >
-          {/* User location marker */}
           <Marker
               coordinate={{
                 latitude: location.latitude,
@@ -92,35 +90,42 @@ export default function MapScreen() {
               title="You are here"
           />
 
-          {/* Nearby Jummahs */}
-          {Array.isArray(nearbyJummahs) &&
-              nearbyJummahs.map((jummah) => (
-                  <Marker
-                      key={jummah.id}
-                      coordinate={{
-                        latitude: jummah.latitude,
-                        longitude: jummah.longitude,
-                      }}
-                      anchor={{ x: 0.5, y: 0.5 }}
-                  >
-                    <JummahMarkerCircle verified={jummah.isVerifiedOrganizer} />
-                  </Marker>
-
-              ))}
+          {nearbyJummahs.map((jummah) => (
+              <Marker
+                  key={jummah.id}
+                  coordinate={{
+                    latitude: jummah.latitude,
+                    longitude: jummah.longitude,
+                  }}
+                  anchor={{ x: 0.5, y: 0.5 }}
+                  onPress={() => router.push(`/jummah/${jummah.id}`)}
+              >
+                <JummahMarkerCircle verified={jummah.isVerifiedOrganizer} />
+              </Marker>
+          ))}
         </MapView>
 
-        <ModalScreen
-            visible={modalVisible}
-            onClose={() => setModalVisible(false)}
-            title="Create Jummah"
+        {/* New Modal with animation */}
+        <Modal
+            isVisible={modalVisible}
+            backdropColor="#000"
+            backdropOpacity={0.6}
+            animationIn="zoomIn"
+            animationOut="zoomOut"
+            useNativeDriver
+            style={styles.modal}
+            onBackdropPress={() => setModalVisible(false)}
         >
-          <CreateJummahForm
-              coords={selectedCoords}
-              onClose={() => setModalVisible(false)}
-          />
-        </ModalScreen>
+          <View style={styles.modalContent}>
+            <CreateJummahForm
+                coords={selectedCoords}
+                onClose={() => setModalVisible(false)}
+            />
+          </View>
+        </Modal>
       </View>
   );
+
 }
 
 const styles = StyleSheet.create({
@@ -136,4 +141,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  modal: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    margin: 0,
+  },
+  modalContent: {
+    backgroundColor: '#1f2937',
+    borderRadius: 12,
+    padding: 20,
+    width: '90%',
+    maxHeight: 500, // fixed height to prevent it filling the whole screen
+    justifyContent: 'center',
+  },
 });
+

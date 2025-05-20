@@ -5,9 +5,7 @@ import {
   TextInput,
   Alert,
   TouchableOpacity,
-  ScrollView,
   StyleSheet,
-  KeyboardAvoidingView,
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
@@ -61,109 +59,100 @@ export default function CreateJummahForm({ coords, onClose }: Props) {
   };
 
   return (
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
-            {/* Date & Time Row */}
-            <View style={styles.row}>
-              <View style={styles.half}>
-                <Text style={styles.label}>Date</Text>
-                <TouchableOpacity style={styles.selector} onPress={() => setActivePicker('date')}>
-                  <Text style={styles.selectorText}>{date.toDateString()}</Text>
-                </TouchableOpacity>
-                {activePicker === 'date' && (
-                    <DateTimePicker
-                        value={date}
-                        mode="date"
-                        display={Platform.OS === 'ios' ? 'inline' : 'default'}
-                        minimumDate={new Date()}
-                        maximumDate={new Date(Date.now() + 86400000)} // only today & tomorrow
-                        onChange={(_, selectedDate) => {
-                          if (selectedDate) setDate(selectedDate);
-                          if (Platform.OS === 'android') setActivePicker(null);
-                        }}
-                    />
-                )}
-              </View>
-
-              <View style={styles.half}>
-                <Text style={styles.label}>Time</Text>
-                <TouchableOpacity style={styles.selector} onPress={() => setActivePicker('time')}>
-                  <Text style={styles.selectorText}>
-                    {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </Text>
-                </TouchableOpacity>
-                {activePicker === 'time' && (
-                    <DateTimePicker
-                        value={time}
-                        mode="time"
-                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                        onChange={(_, selectedTime) => {
-                          if (selectedTime) setTime(selectedTime);
-                          if (Platform.OS === 'android') setActivePicker(null);
-                        }}
-                    />
-                )}
-              </View>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.form}>
+          {/* Date & Time Row */}
+          <View style={styles.row}>
+            <View style={styles.half}>
+              <Text style={styles.label}>Date</Text>
+              <TouchableOpacity style={styles.selector} onPress={() => setActivePicker('date')}>
+                <Text style={styles.selectorText}>{date.toDateString()}</Text>
+              </TouchableOpacity>
+              {activePicker === 'date' && (
+                  <DateTimePicker
+                      value={date}
+                      mode="date"
+                      display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                      minimumDate={new Date()}
+                      maximumDate={new Date(Date.now() + 86400000)}
+                      onChange={(_, selectedDate) => {
+                        if (selectedDate) setDate(selectedDate);
+                        if (Platform.OS === 'android') setActivePicker(null);
+                      }}
+                  />
+              )}
             </View>
 
-            {/* iOS "Done" button */}
-            {Platform.OS === 'ios' && activePicker && (
-                <TouchableOpacity onPress={() => setActivePicker(null)} style={styles.dismissButton}>
-                  <Text style={styles.dismissText}>Done</Text>
-                </TouchableOpacity>
-            )}
-
-            {/* Notes */}
-            <View style={styles.section}>
-              <Text style={styles.label}>Notes</Text>
-              <TextInput
-                  style={styles.notesInput}
-                  placeholder="Add any relevant notes..."
-                  placeholderTextColor="#6b7280"
-                  multiline
-                  value={notes}
-                  onChangeText={setNotes}
-              />
+            <View style={styles.half}>
+              <Text style={styles.label}>Time</Text>
+              <TouchableOpacity style={styles.selector} onPress={() => setActivePicker('time')}>
+                <Text style={styles.selectorText}>
+                  {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </Text>
+              </TouchableOpacity>
+              {activePicker === 'time' && (
+                  <DateTimePicker
+                      value={time}
+                      mode="time"
+                      display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                      onChange={(_, selectedTime) => {
+                        if (selectedTime) setTime(selectedTime);
+                        if (Platform.OS === 'android') setActivePicker(null);
+                      }}
+                  />
+              )}
             </View>
+          </View>
 
-            {/* Prayer Time Carousel */}
-            <View style={styles.section}>
-              <Text style={styles.label}>Prayer Time</Text>
-              <FlatList
-                  data={PRAYER_TIMES}
-                  keyExtractor={(item) => item}
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.carousel}
-                  renderItem={({ item }) => (
-                      <TouchableOpacity
-                          onPress={() => setPrayerTime(item as typeof prayerTime)}
-                          style={[
-                            styles.carouselItem,
-                            prayerTime === item && styles.carouselItemSelected,
-                          ]}
+          {Platform.OS === 'ios' && activePicker && (
+              <TouchableOpacity onPress={() => setActivePicker(null)} style={styles.dismissButton}>
+                <Text style={styles.dismissText}>Done</Text>
+              </TouchableOpacity>
+          )}
+
+          {/* Notes */}
+          <View style={styles.section}>
+            <Text style={styles.label}>Notes</Text>
+            <TextInput
+                style={styles.notesInput}
+                placeholder="Add any relevant notes..."
+                placeholderTextColor="#6b7280"
+                multiline
+                value={notes}
+                onChangeText={setNotes}
+            />
+          </View>
+
+          {/* Prayer Time Carousel */}
+          <View style={styles.section}>
+            <Text style={styles.label}>Prayer Time</Text>
+            <FlatList
+                data={PRAYER_TIMES}
+                keyExtractor={(item) => item}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.carousel}
+                renderItem={({ item }) => (
+                    <TouchableOpacity
+                        onPress={() => setPrayerTime(item as typeof prayerTime)}
+                        style={[styles.carouselItem, prayerTime === item && styles.carouselItemSelected]}
+                    >
+                      <Text
+                          style={[styles.carouselText, prayerTime === item && styles.carouselTextSelected]}
                       >
-                        <Text
-                            style={[
-                              styles.carouselText,
-                              prayerTime === item && styles.carouselTextSelected,
-                            ]}
-                        >
-                          {item}
-                        </Text>
-                      </TouchableOpacity>
-                  )}
-              />
-            </View>
+                        {item}
+                      </Text>
+                    </TouchableOpacity>
+                )}
+            />
+          </View>
 
-            {/* Submit Button */}
-            <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-              <Text style={styles.buttonText}>Create Jummah</Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </TouchableWithoutFeedback>
-      </KeyboardAvoidingView>
+          {/* Submit Button */}
+          <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+            <Text style={styles.buttonText}>Create Jummah</Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableWithoutFeedback>
   );
 }
 
@@ -173,6 +162,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#111827',
     borderRadius: 12,
     gap: 20,
+    width: '100%',
   },
   section: {
     gap: 8,
