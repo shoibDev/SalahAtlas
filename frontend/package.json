@@ -39,7 +39,8 @@
     "react-native-svg": "^15.12.0",
     "react-native-web": "~0.20.0",
     "sockjs-client": "^1.6.1",
-    "expo-linear-gradient": "~14.1.4"
+    "expo-linear-gradient": "~14.1.4",
+    "expo-secure-store": "~14.2.3"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

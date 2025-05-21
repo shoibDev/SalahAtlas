@@ -12,6 +12,7 @@ import {
 import Modal from 'react-native-modal';
 import JummahChat from '@/components/chat/JummahChat';
 import ChatPreview from '@/components/chat/ChatPreview';
+import apiClient from "@/api/apiClient";
 
 export default function JummahDetailScreen() {
   const { jummahId } = useLocalSearchParams();
@@ -45,29 +46,16 @@ export default function JummahDetailScreen() {
 
   useEffect(() => {
     const fetchDetails = async () => {
-      await new Promise((res) => setTimeout(res, 800));
-
-      const mockedResponse = {
-        id: jummahId,
-        date: '2025-05-17',
-        time: '13:15',
-        prayerTime: 'DHUHR',
-        notes: 'Please arrive 10 minutes early to help with setup.',
-        organizer: {
-          id: 'org-123',
-          firstName: 'Shoib',
-          lastName: 'Wahab',
-          verified: true,
-        },
-        attendees: [
-          { id: 'a1', firstName: 'Sarah', lastName: 'Ahmed', verified: false },
-          { id: 'a2', firstName: 'Yusuf', lastName: 'Rahman', verified: true },
-          { id: 'a3', firstName: 'Layla', lastName: 'Omar', verified: false },
-        ],
-      };
-
-      setDetail(mockedResponse);
-      setLoading(false);
+      try {
+        setLoading(true);
+        console.log("Fetching jummah details for ID:", jummahId)
+        const res = await apiClient.get(`/jummah/public/detail/${jummahId}`);
+        setDetail(res.data.data); // assuming your API returns the object directly
+      } catch (error: any) {
+        console.error("Failed to fetch jummah details:", error.message);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchDetails();

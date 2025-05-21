@@ -27,3 +27,14 @@ export const getNearbyJummah = async (
     throw error;
   }
 };
+
+export const getJummahDetails = async (jummahId: string) => {
+try {
+    const response = await apiClient.get(`${API_END_POINTS.GET_JUMMAH_DETAILS}/${jummahId}`);
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching Jummah details:", error);
+    throw error;
+  }
+
+}

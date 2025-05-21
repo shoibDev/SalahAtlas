@@ -35,15 +35,7 @@ export default function MapScreen() {
       setLocation(loc.coords);
 
       try {
-        // const jummahs = await getNearbyJummah(loc.coords.latitude, loc.coords.longitude);
-        const jummahs = [
-          {
-            id: '7944b79b-46bd-449d-b3ab-298b0d552a03',
-            latitude: 43.433852577433456,
-            longitude: -80.50930431118407,
-            isVerifiedOrganizer: false,
-          },
-        ];
+        const jummahs = await getNearbyJummah(loc.coords.latitude, loc.coords.longitude);
         setNearbyJummahs(Array.isArray(jummahs) ? jummahs : []);
       } catch (err) {
         console.error('Failed to fetch nearby Jummahs', err);
