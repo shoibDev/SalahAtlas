@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { router } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { AuthContext } from '@/context/authContext';
 
 interface SettingItemProps {
   icon: keyof typeof FontAwesome.glyphMap;
@@ -20,6 +21,13 @@ const SettingItem: React.FC<SettingItemProps> = ({ icon, label, onPress }) => (
 );
 
 export default function SettingsScreen() {
+  const authState = useContext(AuthContext);
+
+  const handleLogout = () => {
+    authState.logOut();
+    router.replace('/login'); // 👈 make sure this matches your login route
+  };
+
   return (
       <ScrollView style={styles.container}>
         <View style={styles.logoContainer}>
@@ -43,6 +51,11 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Misc</Text>
           <SettingItem icon="shield" label="Privacy Policy" onPress={() => router.push('/settings/PrivacyPolicy')} />
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Account</Text>
+          <SettingItem icon="sign-out" label="Log Out" onPress={handleLogout} />
         </View>
       </ScrollView>
   );
