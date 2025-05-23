@@ -8,7 +8,6 @@ const apiClient = axios.create({
   },
 });
 
-// Add request interceptor to inject access token from SecureStore
 apiClient.interceptors.request.use(
     async (config) => {
       const token = await SecureStore.getItemAsync('accessToken');

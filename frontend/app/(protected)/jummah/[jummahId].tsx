@@ -5,63 +5,46 @@ import {
   Text,
   StyleSheet,
   ActivityIndicator,
-  ScrollView,
   TouchableOpacity,
-  Platform,
 } from 'react-native';
 import Modal from 'react-native-modal';
 import JummahChat from '@/components/chat/JummahChat';
 import ChatPreview from '@/components/chat/ChatPreview';
-import apiClient from "@/api/apiClient";
+import {ChatProvider} from "@/context/ChatContext";
+import {useAuth} from "@/context/authContext";
+import { JummahDetail } from '@/types/jummah';
+import { getJummahDetail } from '@/api/jummah';
+
 
 export default function JummahDetailScreen() {
   const { jummahId } = useLocalSearchParams();
   const [loading, setLoading] = useState(true);
-  const [detail, setDetail] = useState<any>(null);
+  const [detail, setDetail] = useState<JummahDetail | null>(null);
   const [isAttendeeModalVisible, setAttendeeModalVisible] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
 
-  const user = { name: 'Test User' };
-  const authToken = 'YOUR_JWT_TOKEN';
+  const user = { name: 'MobileUser' }; // TODO: Replace with actual auth context
 
-  const [messages, setMessages] = useState([
-    { sender: 'Ali', message: 'Asalaamu Alaikum!', type: 'CHAT' },
-    { sender: 'Sarah', message: 'Wa Alaikum Salaam!', type: 'CHAT' },
-    { sender: 'Yusuf', message: 'Looking forward to Jummah.', type: 'CHAT' },
-    { sender: 'Yusuf', message: 'Looking forward to Jummah.', type: 'CHAT' },
-    { sender: 'Yusuf', message: 'Looking forward to Jummah.', type: 'CHAT' },
-    { sender: 'Yusuf', message: 'Looking forward to Jummah.', type: 'CHAT' },
-    { sender: 'Yusuf', message: 'Looking forward to Jummah.', type: 'CHAT' },
-    { sender: 'Yusuf', message: 'Looking forward to Jummah.', type: 'CHAT' },
-    { sender: 'Yusuf', message: 'Looking forward to Jummah.', type: 'CHAT' },
-    { sender: 'Yusuf', message: 'Looking forward to Jummah.', type: 'CHAT' },
-    { sender: 'Yusuf', message: 'Looking forward to Jummah.', type: 'CHAT' },
-    { sender: 'Yusuf', message: 'Looking forward to Jummah.', type: 'CHAT' },
-    { sender: 'Yusuf', message: 'Looking forward to Jummah.', type: 'CHAT' },
-    { sender: 'Yusuf', message: 'Looking forward to Jummah.', type: 'CHAT' },
-    { sender: 'Yusuf', message: 'Looking forward to Jummah.', type: 'CHAT' },
-    { sender: 'Yusuf', message: 'Looking forward to Jummah.', type: 'CHAT' },
+  const { token } = useAuth();
 
-  ]);
 
   useEffect(() => {
     const fetchDetails = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
-        console.log("Fetching jummah details for ID:", jummahId)
-        const res = await apiClient.get(`/jummah/public/detail/${jummahId}`);
-        setDetail(res.data.data); // assuming your API returns the object directly
-      } catch (error: any) {
-        console.error("Failed to fetch jummah details:", error.message);
+        const data = await getJummahDetail(jummahId as string);
+        setDetail(data);
+      } catch (err) {
+        console.error('Failed to fetch jummah details', err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchDetails();
   }, [jummahId]);
 
-  if (loading) {
+
+  if (loading || !token) {
     return (
         <View style={styles.center}>
           <ActivityIndicator size="large" color="#10b981" />
@@ -73,30 +56,30 @@ export default function JummahDetailScreen() {
   const closeAttendees = () => setAttendeeModalVisible(false);
 
   return (
-      < View style={styles.container}>
+      <View style={styles.container}>
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <Text style={styles.label}>Date</Text>
-            <Text style={styles.value}>{detail.date}</Text>
+            <Text style={styles.value}>{detail!.date}</Text>
 
             <Text style={[styles.label, { marginTop: 12 }]}>Time</Text>
             <Text style={styles.value}>
-              {detail.time} ({detail.prayerTime})
+              {detail!.time} ({detail!.prayerTime})
             </Text>
           </View>
 
           <View style={styles.headerRight}>
             <Text style={styles.label}>Organizer</Text>
             <Text style={styles.value}>
-              {detail.organizer.firstName} {detail.organizer.lastName}
-              {detail.organizer.verified && (
+              {detail!.organizer.firstName} {detail!.organizer.lastName}
+              {detail!.organizer.verified && (
                   <Text style={styles.verified}> • Verified</Text>
               )}
             </Text>
 
             <TouchableOpacity onPress={openAttendees} style={{ marginTop: 16 }}>
               <Text style={[styles.value, styles.attendeeToggle]}>
-                {detail.attendees.length} attending
+                {detail!.attendees.length} attending
               </Text>
             </TouchableOpacity>
           </View>
@@ -104,20 +87,19 @@ export default function JummahDetailScreen() {
 
         <View style={styles.section}>
           <Text style={styles.label}>Notes</Text>
-          <Text style={styles.value}>{detail.notes || 'None'}</Text>
+          <Text style={styles.value}>{detail!.notes || 'None'}</Text>
         </View>
 
-        <ChatPreview messages={messages} onExpand={() => setChatOpen(true)} />
-
-        <JummahChat
-            visible={chatOpen}
-            onClose={() => setChatOpen(false)}
-            jummahId={jummahId as string}
-            username={user.name}
-            token={authToken}
-            messages={messages}
-            setMessages={setMessages}
-        />
+        <ChatProvider jummahId={jummahId as string}>
+          <ChatPreview onExpand={() => setChatOpen(true)} />
+          <JummahChat
+              visible={chatOpen}
+              onClose={() => setChatOpen(false)}
+              username={user.name}
+              token={token}
+              jummahId={jummahId as string}
+          />
+        </ChatProvider>
 
         <Modal
             isVisible={isAttendeeModalVisible}
@@ -130,10 +112,12 @@ export default function JummahDetailScreen() {
         >
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Attendees</Text>
-            {detail.attendees.map((a: any) => (
+            {detail!.attendees.map((a: any) => (
                 <Text key={a.id} style={styles.attendee}>
                   • {a.firstName} {a.lastName}
-                  {a.verified && <Text style={styles.verified}> • Verified</Text>}
+                  {a.verified && (
+                      <Text style={styles.verified}> • Verified</Text>
+                  )}
                 </Text>
             ))}
             <TouchableOpacity onPress={closeAttendees} style={styles.closeButton}>

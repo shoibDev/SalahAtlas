@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -6,259 +6,276 @@ import {
   TouchableOpacity,
   FlatList,
   StyleSheet,
-  KeyboardAvoidingView,
   Platform,
-  Animated,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
+  KeyboardAvoidingView,
+  LayoutAnimation,
+    UIManager,
+
 } from 'react-native';
 import Modal from 'react-native-modal';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-interface ChatMessage {
-  sender: string;
-  message: string;
-  type: 'CHAT';
-}
+import { useJummahChatConnection } from '@/hook/useJummahChat';
+import { ChatMessage } from '@/types/chat';
+import { useChat } from '@/context/ChatContext';
 
 interface Props {
   visible: boolean;
   onClose: () => void;
-  jummahId: string;
   username: string;
   token: string;
-  messages: ChatMessage[];
-  setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
+  jummahId: string;
 }
 
 export default function JummahChat({
                                      visible,
                                      onClose,
-                                     jummahId,
                                      username,
                                      token,
-                                     messages,
-                                     setMessages,
+                                     jummahId,
                                    }: Props) {
+  const { messages, setMessages, loadMore, hasMore } = useChat();
   const [messageText, setMessageText] = useState('');
-  const [isAtBottom, setIsAtBottom] = useState(true);
-  const flatListRef = useRef<FlatList>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const listRef = useRef<FlatList<ChatMessage>>(null);
 
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
-  const opacityAnim = useRef(new Animated.Value(0)).current;
+  const scrollOffsetY = useRef(0);
+  const [isNearBottom, setIsNearBottom] = useState(true);
 
-  useEffect(() => {
-    if (visible) {
-      Animated.parallel([
-        Animated.timing(scaleAnim, {
-          toValue: 1,
-          duration: 250,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacityAnim, {
-          toValue: 1,
-          duration: 250,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      scaleAnim.setValue(0.8);
-      opacityAnim.setValue(0);
-    }
-  }, [visible]);
-
-  const sendMessage = () => {
-    if (!messageText.trim()) return;
-    const msg: ChatMessage = {
-      sender: username,
-      message: messageText.trim(),
-      type: 'CHAT',
-    };
-    setMessages(prev => [...prev, msg]);
-    setMessageText('');
-
-    // Force scroll to bottom after sending
-    setTimeout(() => {
-      flatListRef.current?.scrollToEnd({ animated: true });
-    }, 100);
+  const scrollToBottom = () => {
+    listRef.current?.scrollToOffset({ offset: 0, animated: true });
   };
 
-  const renderItem = ({ item }: { item: ChatMessage }) => (
-      <View style={styles.messageWrapper}>
-        <Text style={styles.sender}>{item.sender}</Text>
-        <Text style={styles.message}>{item.message}</Text>
-      </View>
+  const { isConnected, send } = useJummahChatConnection({
+    visible,
+    jummahId,
+    username,
+    token,
+    onMessage: (newMsg) => {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      setMessages((prev) => [newMsg, ...prev]);
+      if (isNearBottom) {
+        requestAnimationFrame(() => scrollToBottom());
+      }
+    },
+  });
+
+  const handleSend = () => {
+    const trimmed = messageText.trim();
+    if (!trimmed) return;
+    send(trimmed);
+    setMessageText('');
+    requestAnimationFrame(() => scrollToBottom());
+  };
+
+  const handleLoadMore = async () => {
+    setLoadingMore(true);
+    await loadMore();
+    setLoadingMore(false);
+  };
+
+  const renderSystemMessage = (text: string) => (
+      <Text style={styles.systemMessage}>{text}</Text>
   );
 
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-    const threshold = 20;
-    const atBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - threshold;
-    setIsAtBottom(atBottom);
+  const renderItem = ({ item }: { item: ChatMessage }) => {
+    const isSelf = item.sender === username;
+    return (
+        <View style={styles.messageLine}>
+          <Text style={styles.sender}>{isSelf ? 'You' : item.sender}:</Text>
+          {item.type === 'CHAT' && <Text style={styles.message}> {item.message}</Text>}
+          {item.type === 'JOIN' && renderSystemMessage('joined the chat')}
+          {item.type === 'LEAVE' && renderSystemMessage('left the chat')}
+        </View>
+    );
   };
+
+  const renderLoadMoreButton = () =>
+      hasMore ? (
+          <TouchableOpacity
+              style={styles.loadMoreButton}
+              onPress={handleLoadMore}
+              activeOpacity={0.8}
+          >
+            <Text style={styles.loadMoreText}>
+              {loadingMore ? 'Loading more...' : 'Load earlier messages'}
+            </Text>
+          </TouchableOpacity>
+      ) : null;
+
+  if (
+      Platform.OS === 'android' &&
+      UIManager.setLayoutAnimationEnabledExperimental
+  ) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+  }
 
   return (
       <Modal
           isVisible={visible}
-          backdropColor="#000"
-          backdropOpacity={0.6}
-          animationIn="fadeIn"
-          animationOut="fadeOut"
-          backdropTransitionOutTiming={0}
-          useNativeDriver
           style={styles.modal}
+          backdropOpacity={0.6}
+          useNativeDriver={true}
+          onBackdropPress={onClose}
+          onBackButtonPress={onClose}
       >
-        <Animated.View
-            style={[styles.animatedContainer, { transform: [{ scale: scaleAnim }], opacity: opacityAnim }]}
-        >
-          <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-            <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
-                style={styles.container}
-            >
-              <View style={styles.innerContainer}>
-                <View style={styles.header}>
-                  <Text style={styles.headerTitle}>Jummah Chat</Text>
-                  <TouchableOpacity onPress={onClose}>
-                    <Text style={styles.closeButton}>×</Text>
-                  </TouchableOpacity>
-                </View>
+        <SafeAreaView style={styles.safeArea}>
+          <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              style={styles.keyboardContainer}
+          >
+            <View style={styles.header}>
+              <Text style={styles.title}>Jummah Chat</Text>
+              <TouchableOpacity onPress={onClose}>
+                <Text style={styles.closeButton}>×</Text>
+              </TouchableOpacity>
+            </View>
 
-                <FlatList
-                    ref={flatListRef}
-                    data={messages}
-                    keyExtractor={(_, idx) => idx.toString()}
-                    renderItem={renderItem}
-                    contentContainerStyle={styles.chatBox}
-                    onContentSizeChange={() => {
-                      if (isAtBottom) {
-                        flatListRef.current?.scrollToEnd({ animated: true });
-                      }
-                    }}
-                    onScroll={handleScroll}
-                    scrollEventThrottle={100}
-                />
+            <FlatList
+                ref={listRef}
+                data={messages}
+                keyExtractor={(_, index) => index.toString()}
+                renderItem={renderItem}
+                inverted
+                ListFooterComponent={renderLoadMoreButton}
+                contentContainerStyle={styles.listContent}
+                keyboardShouldPersistTaps="handled"
+                onScroll={({ nativeEvent }) => {
+                  const y = nativeEvent.contentOffset.y;
+                  scrollOffsetY.current = y;
+                  setIsNearBottom(y < 50);
+                }}
+                scrollEventThrottle={16}
+            />
 
-                <View style={styles.inputWrapper}>
-                  <View style={styles.inputContainer}>
-                    <TextInput
-                        placeholder="Message..."
-                        placeholderTextColor="#9ca3af"
-                        value={messageText}
-                        onChangeText={setMessageText}
-                        style={styles.input}
-                        multiline
-                        textAlignVertical="top"
-                        blurOnSubmit={false}
-                        onSubmitEditing={() => {}}
-                    />
-                    <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
-                      <Text style={styles.sendText}>Send</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            </KeyboardAvoidingView>
-          </SafeAreaView>
-        </Animated.View>
+            <View style={styles.inputRow}>
+              <TextInput
+                  style={styles.input}
+                  value={messageText}
+                  onChangeText={setMessageText}
+                  placeholder="Message..."
+                  placeholderTextColor="#9ca3af"
+                  multiline
+              />
+              <TouchableOpacity
+                  style={[styles.sendButton, !isConnected && styles.disabled]}
+                  onPress={handleSend}
+                  disabled={!isConnected}
+              >
+                <Text style={styles.sendText}>{isConnected ? 'Send' : '...'}</Text>
+              </TouchableOpacity>
+            </View>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
       </Modal>
   );
 }
 
 const styles = StyleSheet.create({
   modal: {
+    margin: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    margin: 0,
-  },
-  animatedContainer: {
-    width: '92%',
-    height: '85%',
-    backgroundColor: '#111827',
-    borderRadius: 14,
-    overflow: 'hidden',
   },
   safeArea: {
     flex: 1,
     backgroundColor: '#111827',
+    width: '100%',
   },
-  container: {
+  keyboardContainer: {
     flex: 1,
-  },
-  innerContainer: {
-    flex: 1,
-    justifyContent: 'space-between',
+    padding: 12,
   },
   header: {
-    backgroundColor: '#1f2937',
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    height: 64,
+    paddingTop: 32,
+    paddingBottom: 12,
     borderBottomWidth: 1,
     borderColor: '#374151',
-    justifyContent: 'space-between',
+    marginBottom: 12,
   },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+  title: {
     color: '#f9fafb',
+    fontSize: 18,
+    fontWeight: '700',
   },
   closeButton: {
-    fontSize: 24,
+    fontSize: 26,
     color: '#f9fafb',
-    paddingHorizontal: 8,
   },
-  chatBox: {
-    padding: 16,
-    flexGrow: 1,
+  listContent: {
+    paddingBottom: 12,
   },
-  messageWrapper: {
-    marginBottom: 14,
+  messageLine: {
+    flexDirection: 'row',
+    marginBottom: 12,
   },
   sender: {
-    fontSize: 14,
+    color: '#10b981',
     fontWeight: '600',
-    color: '#133383',
+    fontSize: 16,
   },
   message: {
-    fontSize: 15,
     color: '#f3f4f6',
-    marginTop: 2,
+    fontSize: 16,
   },
-  inputWrapper: {
-    backgroundColor: '#1f2937',
-    paddingBottom: Platform.OS === 'ios' ? 20 : 12,
+  systemMessage: {
+    fontStyle: 'italic',
+    color: '#9ca3af',
+    marginLeft: 4,
+    fontSize: 15,
   },
-  inputContainer: {
+  inputRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    padding: 12,
-    borderTopWidth: 1,
-    borderColor: '#374151',
+    paddingTop: 8,
+    marginBottom: 12,
   },
   input: {
     flex: 1,
-    backgroundColor: '#374151',
-    borderRadius: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    backgroundColor: '#1f2937',
     color: '#f9fafb',
-    fontSize: 15,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    fontSize: 16,
     maxHeight: 120,
   },
   sendButton: {
-    marginLeft: 12,
-    backgroundColor: '#133383',
+    marginLeft: 8,
+    backgroundColor: '#2563eb',
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 20,
-    alignSelf: 'flex-end',
+  },
+  disabled: {
+    backgroundColor: '#555',
   },
   sendText: {
     color: '#f9fafb',
     fontWeight: '600',
+  },
+  loadMoreButton: {
+    marginVertical: 12,
+    alignSelf: 'center',
+    backgroundColor: '#1f2937',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#10b981',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3, // Android shadow
+  },
+
+  loadMoreText: {
+    color: '#10b981',
+    fontWeight: '600',
+    fontSize: 15,
+    textAlign: 'center',
   },
 });

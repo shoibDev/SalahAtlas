@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'rea
 import { router } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { AuthContext } from '@/context/authContext';
+import { useTheme } from '@/context/ThemeContext';
 
 interface SettingItemProps {
   icon: keyof typeof FontAwesome.glyphMap;
@@ -10,51 +11,60 @@ interface SettingItemProps {
   onPress: () => void;
 }
 
-const SettingItem: React.FC<SettingItemProps> = ({ icon, label, onPress }) => (
-    <TouchableOpacity style={styles.settingItem} onPress={onPress}>
-      <View style={styles.itemContent}>
-        <FontAwesome name={icon} size={20} color="#fff" style={styles.icon} />
-        <Text style={styles.itemText}>{label}</Text>
-      </View>
-      <FontAwesome name="angle-right" size={18} color="#aaa" />
-    </TouchableOpacity>
-);
+const SettingItem: React.FC<SettingItemProps> = ({ icon, label, onPress }) => {
+  const theme = useTheme();
+
+  return (
+      <TouchableOpacity
+          style={[styles.settingItem, { backgroundColor: theme.surface }]}
+          onPress={onPress}
+      >
+        <View style={styles.itemContent}>
+          <FontAwesome name={icon} size={20} color={theme.accent} style={styles.icon} />
+          <Text style={[styles.itemText, { color: theme.background }]}>{label}</Text>
+        </View>
+        <FontAwesome name="angle-right" size={18} color={theme.accent} />
+      </TouchableOpacity>
+  );
+};
 
 export default function SettingsScreen() {
   const authState = useContext(AuthContext);
+  const theme = useTheme();
 
   const handleLogout = () => {
     authState.logOut();
-    router.replace('/login'); // 👈 make sure this matches your login route
+    router.replace('/login');
   };
 
   return (
-      <ScrollView style={styles.container}>
+      <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
         <View style={styles.logoContainer}>
-          <Image
-              source={require('@/assets/images/brand-banner.png')}
-              style={styles.logo}
-              resizeMode="contain"
-          />
+          {/* You can uncomment and re-enable when you have a properly styled image */}
+          {/*<Image
+          source={require('@/assets/images/brand-banner.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />*/}
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Preferences</Text>
+          <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>Preferences</Text>
           <SettingItem icon="cog" label="Theme" onPress={() => router.push('/settings/Theme')} />
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>General</Text>
+          <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>General</Text>
           <SettingItem icon="bell" label="Notifications" onPress={() => router.push('/settings/Notifications')} />
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Misc</Text>
+          <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>Misc</Text>
           <SettingItem icon="shield" label="Privacy Policy" onPress={() => router.push('/settings/PrivacyPolicy')} />
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account</Text>
+          <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>Account</Text>
           <SettingItem icon="sign-out" label="Log Out" onPress={handleLogout} />
         </View>
       </ScrollView>
@@ -64,7 +74,6 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0B0F1A',
     paddingHorizontal: 20,
   },
   logoContainer: {
@@ -81,13 +90,11 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   sectionTitle: {
-    color: '#aaa',
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 10,
   },
   settingItem: {
-    backgroundColor: '#131B2A',
     padding: 15,
     borderRadius: 12,
     flexDirection: 'row',
@@ -103,7 +110,6 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   itemText: {
-    color: '#fff',
     fontSize: 16,
   },
 });

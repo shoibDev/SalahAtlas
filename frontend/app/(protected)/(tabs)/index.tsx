@@ -9,8 +9,8 @@ import {
 import MapView, { Marker, LatLng, Region } from 'react-native-maps';
 import * as Location from 'expo-location';
 import CreateJummahForm from '../../../components/forms/CreateJummahForm';
-import { getNearbyJummah } from '@/api/jummahApi';
-import { JummahMapResponse } from '@/types/JummahTypes';
+import { getNearbyJummah } from '@/api/jummah';
+import { JummahMapResponse } from '@/types/jummah';
 import JummahMarkerCircle from "@/components/JummahMarkerCircle";
 import { useRouter } from 'expo-router';
 import Modal from 'react-native-modal';

@@ -12,8 +12,8 @@ import {
   FlatList,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { createJummah } from '@/api/jummahApi';
-import { JummahCreateRequest } from '@/types/JummahTypes';
+import { createJummah } from '@/api/jummah';
+import { JummahCreateRequest } from '@/types/jummah';
 
 interface Props {
   coords: { latitude: number; longitude: number } | null;

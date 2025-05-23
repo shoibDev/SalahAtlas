@@ -6,19 +6,16 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
+import { useChat } from '@/context/ChatContext';
 
-interface ChatMessage {
-  sender: string;
-  message: string;
-}
 
 interface Props {
-  messages: ChatMessage[];
   onExpand: () => void;
 }
 
-export default function ChatPreview({ messages, onExpand }: Props) {
-  const latestMessages = messages.slice(-15);
+export default function ChatPreview({onExpand }: Props) {
+  const { messages } = useChat();
+  const latestMessages = messages.slice(0, 15);
 
   return (
       <View style={styles.container}>
@@ -33,16 +30,20 @@ export default function ChatPreview({ messages, onExpand }: Props) {
             nestedScrollEnabled={true}
             onStartShouldSetResponderCapture={() => true}
         >
-          {latestMessages.map((item, idx) => (
-              <View key={idx} style={styles.messageLine}>
-                <Text style={styles.sender}>{item.sender}:</Text>
-                <Text style={styles.message}> {item.message}</Text>
-              </View>
-          ))}
+          {latestMessages
+              .slice()
+              .reverse() // flip to oldest → newest visually
+              .map((item, idx) => (
+                  <View key={idx} style={styles.messageLine}>
+                    <Text style={styles.sender}>{item.sender}:</Text>
+                    <Text style={styles.message}> {item.message}</Text>
+                  </View>
+              ))}
         </ScrollView>
       </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
