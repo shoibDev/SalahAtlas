@@ -1,15 +1,17 @@
+// ThemeContext.ts
 import React, { createContext, useContext, ReactNode } from 'react';
 
 export const colors = {
   background: '#0D2B35',
   backgroundTexture: require('@/assets/textures/absurdity.png'),
-  surface: '#F3E9E2',
+  blackThreadBackground: require('@/assets/textures/black_thread2.png'),
+  surface: '#163946',
   textPrimary: '#F3E9E2',
   textSecondary: '#C9886B',
-  accent: '#C9886B',
-  cardBackground: '#F3E9E2',
+  accent: '#FFAD66',
+  cardBackground: '#122E38',
   buttonBackground: '#C9886B',
-  buttonText: '#F3E9E2',
+  buttonText: '#FFFFFF',
 };
 
 type Theme = typeof colors;

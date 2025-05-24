@@ -25,6 +25,7 @@ export default function CompassScreen() {
 
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const animRef = useRef<Animated.CompositeAnimation | null>(null);
+  const CaliCircle = require('@/assets/images/cali_arab.png');
 
   useEffect(() => {
     let headingSub: Location.LocationSubscription;
@@ -116,38 +117,47 @@ export default function CompassScreen() {
         <Text style={[styles.header, { color: theme.textPrimary }]}>Qibla Direction</Text>
 
         <View style={[styles.glowCircleWrapper, { shadowColor: theme.accent }]}>
-          <View
-              style={[
-                styles.compassRing,
-                {
-                  backgroundColor: theme.surface,
-                  borderColor: theme.accent,
-                },
-              ]}
+          <ImageBackground
+              source={CaliCircle}
+              style={styles.calligraphyWrapper}
+              imageStyle={styles.calligraphyImage}
           >
-            <Animated.View
+            <View
                 style={[
-                  styles.qiblaMarker,
+                  styles.compassRing,
                   {
-                    transform: [{ scale: scaleAnim }],
-                    left: COMPASS_SIZE / 2 + markerX - MARKER_SIZE / 2,
-                    top: COMPASS_SIZE / 2 + markerY - MARKER_SIZE / 2,
-                    backgroundColor: theme.accent,
-                    shadowColor: isExactQibla ? theme.accent : 'transparent',
-                    shadowOpacity: isExactQibla ? 1 : 0,
-                    shadowRadius: isExactQibla ? 12 : 0,
+                    backgroundColor: theme.surface,
+                    borderColor: theme.accent,
                   },
                 ]}
-            />
-          </View>
+            >
+              <Animated.View
+                  style={[
+                    styles.qiblaMarker,
+                    {
+                      transform: [{ scale: scaleAnim }],
+                      left: COMPASS_SIZE / 2 + markerX - MARKER_SIZE / 2,
+                      top: COMPASS_SIZE / 2 + markerY - MARKER_SIZE / 2,
+                      backgroundColor: theme.accent,
+                      shadowColor: isExactQibla ? theme.accent : 'transparent',
+                      shadowOpacity: isExactQibla ? 1 : 0,
+                      shadowRadius: isExactQibla ? 12 : 0,
+                    },
+                  ]}
+              />
+            </View>
+          </ImageBackground>
         </View>
 
-        <View style={styles.infoContainer}>
-          <Text style={[styles.label, { color: theme.textSecondary }]}>Your Heading</Text>
-          <Text style={[styles.value, { color: theme.textPrimary }]}>{Math.round(heading)}°</Text>
-
-          <Text style={[styles.label, { color: theme.textSecondary }]}>Qibla From North</Text>
-          <Text style={[styles.value, { color: theme.textPrimary }]}>{Math.round(qiblaDirection)}°</Text>
+        <View style={styles.infoRow}>
+          <View style={styles.infoBox}>
+            <Text style={[styles.label, { color: theme.textSecondary }]}>Your Heading</Text>
+            <Text style={[styles.value, { color: theme.textPrimary }]}>{Math.round(heading)}°</Text>
+          </View>
+          <View style={styles.infoBox}>
+            <Text style={[styles.label, { color: theme.textSecondary }]}>Qibla From North</Text>
+            <Text style={[styles.value, { color: theme.textPrimary }]}>{Math.round(qiblaDirection)}°</Text>
+          </View>
         </View>
       </View>
   );
@@ -193,12 +203,20 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.8,
     elevation: 10,
   },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 40,
+    marginTop: 10,
+  },
+  infoBox: {
+    alignItems: 'center',
+  },
   infoContainer: {
     alignItems: 'center',
   },
   label: {
     fontSize: 16,
-    marginTop: 10,
   },
   value: {
     fontSize: 20,
@@ -209,5 +227,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  calligraphyWrapper: {
+    width: COMPASS_SIZE + 130,
+    height: COMPASS_SIZE + 130,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  calligraphyImage: {
+    resizeMode: 'contain',
   },
 });

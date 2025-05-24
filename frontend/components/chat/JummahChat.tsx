@@ -9,14 +9,14 @@ import {
   Platform,
   KeyboardAvoidingView,
   LayoutAnimation,
-    UIManager,
-
+  UIManager, ImageBackground,
 } from 'react-native';
 import Modal from 'react-native-modal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useJummahChatConnection } from '@/hook/useJummahChat';
 import { ChatMessage } from '@/types/chat';
 import { useChat } from '@/context/ChatContext';
+import { useTheme } from '@/context/ThemeContext';
 
 interface Props {
   visible: boolean;
@@ -33,11 +33,12 @@ export default function JummahChat({
                                      token,
                                      jummahId,
                                    }: Props) {
+  const theme = useTheme();
+  const styles = getStyles(theme);
   const { messages, setMessages, loadMore, hasMore } = useChat();
   const [messageText, setMessageText] = useState('');
   const [loadingMore, setLoadingMore] = useState(false);
   const listRef = useRef<FlatList<ChatMessage>>(null);
-
   const scrollOffsetY = useRef(0);
   const [isNearBottom, setIsNearBottom] = useState(true);
 
@@ -81,7 +82,9 @@ export default function JummahChat({
     const isSelf = item.sender === username;
     return (
         <View style={styles.messageLine}>
-          <Text style={styles.sender}>{isSelf ? 'You' : item.sender}:</Text>
+          <Text style={[styles.sender, isSelf && styles.senderSelf]}>
+            {isSelf ? 'You' : item.sender}:
+          </Text>
           {item.type === 'CHAT' && <Text style={styles.message}> {item.message}</Text>}
           {item.type === 'JOIN' && renderSystemMessage('joined the chat')}
           {item.type === 'LEAVE' && renderSystemMessage('left the chat')}
@@ -102,10 +105,7 @@ export default function JummahChat({
           </TouchableOpacity>
       ) : null;
 
-  if (
-      Platform.OS === 'android' &&
-      UIManager.setLayoutAnimationEnabledExperimental
-  ) {
+  if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
   }
 
@@ -114,168 +114,196 @@ export default function JummahChat({
           isVisible={visible}
           style={styles.modal}
           backdropOpacity={0.6}
-          useNativeDriver={true}
+          useNativeDriver
           onBackdropPress={onClose}
           onBackButtonPress={onClose}
       >
         <SafeAreaView style={styles.safeArea}>
-          <KeyboardAvoidingView
-              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-              style={styles.keyboardContainer}
+          <ImageBackground
+              source={theme.blackThreadBackground}
+              style={{ flex: 1 }}
+              imageStyle={{ opacity: 1.06 }}
+              resizeMode="cover"
           >
-            <View style={styles.header}>
-              <Text style={styles.title}>Jummah Chat</Text>
-              <TouchableOpacity onPress={onClose}>
-                <Text style={styles.closeButton}>×</Text>
-              </TouchableOpacity>
-            </View>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={styles.keyboardContainer}
+            >
+              {/* 🟫 Solid Header */}
+              <View style={styles.headerContainer}>
+                <View style={styles.header}>
+                  <Text style={styles.title}>Jummah Chat</Text>
+                  <TouchableOpacity onPress={onClose}>
+                    <Text style={styles.closeButton}>×</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
 
-            <FlatList
-                ref={listRef}
-                data={messages}
-                keyExtractor={(_, index) => index.toString()}
-                renderItem={renderItem}
-                inverted
-                ListFooterComponent={renderLoadMoreButton}
-                contentContainerStyle={styles.listContent}
-                keyboardShouldPersistTaps="handled"
-                onScroll={({ nativeEvent }) => {
-                  const y = nativeEvent.contentOffset.y;
-                  scrollOffsetY.current = y;
-                  setIsNearBottom(y < 50);
-                }}
-                scrollEventThrottle={16}
-            />
-
-            <View style={styles.inputRow}>
-              <TextInput
-                  style={styles.input}
-                  value={messageText}
-                  onChangeText={setMessageText}
-                  placeholder="Message..."
-                  placeholderTextColor="#9ca3af"
-                  multiline
+              {/* 📨 Messages */}
+              <FlatList
+                  ref={listRef}
+                  data={messages}
+                  keyExtractor={(_, index) => index.toString()}
+                  renderItem={renderItem}
+                  inverted
+                  ListFooterComponent={renderLoadMoreButton}
+                  contentContainerStyle={styles.listContent}
+                  keyboardShouldPersistTaps="handled"
+                  onScroll={({ nativeEvent }) => {
+                    const y = nativeEvent.contentOffset.y;
+                    scrollOffsetY.current = y;
+                    setIsNearBottom(y < 50);
+                  }}
+                  scrollEventThrottle={16}
               />
-              <TouchableOpacity
-                  style={[styles.sendButton, !isConnected && styles.disabled]}
-                  onPress={handleSend}
-                  disabled={!isConnected}
-              >
-                <Text style={styles.sendText}>{isConnected ? 'Send' : '...'}</Text>
-              </TouchableOpacity>
-            </View>
-          </KeyboardAvoidingView>
+
+              {/* 🔲 Solid Input Row */}
+              <View style={styles.inputContainer}>
+                <TextInput
+                    style={styles.input}
+                    value={messageText}
+                    onChangeText={setMessageText}
+                    placeholder="Type a message..."
+                    placeholderTextColor={theme.textSecondary}
+                    multiline
+                />
+                <TouchableOpacity
+                    style={[styles.sendButton, !isConnected && styles.disabled]}
+                    onPress={handleSend}
+                    disabled={!isConnected}
+                >
+                  <Text style={styles.sendText}>{isConnected ? 'Send' : '...'}</Text>
+                </TouchableOpacity>
+              </View>
+            </KeyboardAvoidingView>
+          </ImageBackground>
         </SafeAreaView>
       </Modal>
   );
 }
+const getStyles = (theme: ReturnType<typeof useTheme>) =>
+    StyleSheet.create({
+      modal: {
+        margin: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
+      safeArea: {
+        flex: 1,
+        backgroundColor: theme.background,
+        width: '100%',
+      },
+      keyboardContainer: {
+        flex: 1,
+        padding: 16,
+      },
+      headerContainer: {
+        width: '100%',
+        backgroundColor: theme.cardBackground,
+        paddingHorizontal: 16,
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+      },
+      header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+        borderColor: theme.surface,
+      },
+      title: {
+        color: theme.textPrimary,
+        fontSize: 18,
+        fontWeight: '700',
+      },
+      closeButton: {
+        fontSize: 26,
+        color: theme.textPrimary,
+      },
+      listContent: {
+        paddingBottom: 12,
+      },
+      messageLine: {
+        flexDirection: 'row',
+        marginBottom: 10,
+        flexWrap: 'wrap',
+      },
+      sender: {
+        color: theme.accent,
+        fontWeight: '600',
+        fontSize: 16,
+      },
+      senderSelf: {
+        color: theme.buttonBackground,
+      },
+      message: {
+        color: theme.textPrimary,
+        fontSize: 16,
+      },
+      systemMessage: {
+        fontStyle: 'italic',
+        color: theme.textSecondary,
+        marginLeft: 4,
+        fontSize: 14,
+      },
+      inputContainer: {
+        width: '100%',
+        flexDirection: 'row',
+        alignItems: 'flex-end',
+        backgroundColor: theme.cardBackground,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        borderTopWidth: 1,
+        borderColor: theme.surface,
+        borderBottomLeftRadius: 16,
+        borderBottomRightRadius: 16,
+        marginBottom: 20,
+      },
+      inputRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-end',
+        paddingTop: 10,
+      },
+      input: {
+        flex: 1,
+        backgroundColor: theme.surface,
+        color: theme.textPrimary,
+        borderRadius: 20,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        fontSize: 16,
+        maxHeight: 120,
+      },
 
-const styles = StyleSheet.create({
-  modal: {
-    margin: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#111827',
-    width: '100%',
-  },
-  keyboardContainer: {
-    flex: 1,
-    padding: 12,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 32,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderColor: '#374151',
-    marginBottom: 12,
-  },
-  title: {
-    color: '#f9fafb',
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  closeButton: {
-    fontSize: 26,
-    color: '#f9fafb',
-  },
-  listContent: {
-    paddingBottom: 12,
-  },
-  messageLine: {
-    flexDirection: 'row',
-    marginBottom: 12,
-  },
-  sender: {
-    color: '#10b981',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  message: {
-    color: '#f3f4f6',
-    fontSize: 16,
-  },
-  systemMessage: {
-    fontStyle: 'italic',
-    color: '#9ca3af',
-    marginLeft: 4,
-    fontSize: 15,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    paddingTop: 8,
-    marginBottom: 12,
-  },
-  input: {
-    flex: 1,
-    backgroundColor: '#1f2937',
-    color: '#f9fafb',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    fontSize: 16,
-    maxHeight: 120,
-  },
-  sendButton: {
-    marginLeft: 8,
-    backgroundColor: '#2563eb',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-  },
-  disabled: {
-    backgroundColor: '#555',
-  },
-  sendText: {
-    color: '#f9fafb',
-    fontWeight: '600',
-  },
-  loadMoreButton: {
-    marginVertical: 12,
-    alignSelf: 'center',
-    backgroundColor: '#1f2937',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: '#10b981',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3, // Android shadow
-  },
-
-  loadMoreText: {
-    color: '#10b981',
-    fontWeight: '600',
-    fontSize: 15,
-    textAlign: 'center',
-  },
-});
+      sendButton: {
+        marginLeft: 8,
+        backgroundColor: theme.accent,
+        paddingVertical: 10,
+        paddingHorizontal: 18,
+        borderRadius: 20,
+      },
+      disabled: {
+        backgroundColor: '#555',
+      },
+      sendText: {
+        color: theme.buttonText,
+        fontWeight: '600',
+      },
+      loadMoreButton: {
+        marginVertical: 12,
+        alignSelf: 'center',
+        backgroundColor: theme.cardBackground,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 999,
+        borderWidth: 1,
+        borderColor: theme.accent,
+      },
+      loadMoreText: {
+        color: theme.accent,
+        fontWeight: '600',
+        fontSize: 15,
+        textAlign: 'center',
+      },
+    });

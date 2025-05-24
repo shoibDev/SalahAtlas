@@ -1,9 +1,11 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Easing, Image, StyleSheet, View } from 'react-native';
+import {useTheme} from "@/context/ThemeContext";
 
 const MARKER_SIZE = 24;
 
 export default function JummahMarkerCircle({ verified }: { verified: boolean }) {
+  const theme = useTheme();
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -35,7 +37,7 @@ export default function JummahMarkerCircle({ verified }: { verified: boolean }) 
             style={[
               styles.inner,
               {
-                backgroundColor: verified ? '#10b981' : '#133383',
+                backgroundColor: theme.background,
                 borderColor: '#fff',
               },
             ]}

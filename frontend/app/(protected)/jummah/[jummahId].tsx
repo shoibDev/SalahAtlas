@@ -14,9 +14,12 @@ import {ChatProvider} from "@/context/ChatContext";
 import {useAuth} from "@/context/authContext";
 import { JummahDetail } from '@/types/jummah';
 import { getJummahDetail } from '@/api/jummah';
+import { useTheme } from '@/context/ThemeContext';
 
 
 export default function JummahDetailScreen() {
+  const theme = useTheme();
+  const styles = StyleSheet.create(getStyles(theme));
   const { jummahId } = useLocalSearchParams();
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<JummahDetail | null>(null);
@@ -129,82 +132,104 @@ export default function JummahDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    backgroundColor: '#111827',
-    minHeight: '100%',
-  },
-  center: {
-    flex: 1,
-    backgroundColor: '#111827',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-    marginBottom: 28,
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  headerRight: {
-    flex: 1,
-    alignItems: 'flex-end',
-  },
-  label: {
-    fontSize: 14,
-    color: '#9ca3af',
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  value: {
-    fontSize: 16,
-    color: '#f3f4f6',
-  },
-  verified: {
-    color: '#133383',
-    fontWeight: '500',
-  },
-  attendeeToggle: {
-    color: '#133383',
-    fontWeight: '600',
-  },
-  section: {
-    marginBottom: 24,
-  },
-  modal: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: '#1f2937',
-    padding: 24,
-    borderRadius: 10,
-    width: '90%',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#f9fafb',
-    marginBottom: 16,
-  },
-  attendee: {
-    fontSize: 15,
-    color: '#f9fafb',
-    marginBottom: 8,
-  },
-  closeButton: {
-    marginTop: 20,
-    backgroundColor: '#133383',
-    paddingVertical: 12,
-    borderRadius: 6,
-    alignItems: 'center',
-  },
-  closeButtonText: {
-    color: '#ffffff',
-    fontWeight: '600',
-  },
-});
+const getStyles = (theme: ReturnType<typeof useTheme>) =>
+    StyleSheet.create({
+      container: {
+        flex: 1,
+        backgroundColor: theme.background,
+        paddingHorizontal: 20,
+        paddingTop: 16,
+      },
+      center: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: theme.background,
+      },
+      header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        backgroundColor: theme.cardBackground,
+        padding: 18,
+        borderRadius: 16,
+        marginBottom: 20,
+        borderWidth: 1,
+        borderColor: theme.surface,
+        shadowColor: '#000',
+        shadowOpacity: 0.2,
+        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 2 },
+        elevation: 3,
+      },
+      headerLeft: {
+        flex: 1,
+      },
+      headerRight: {
+        flex: 1,
+        alignItems: 'flex-end',
+      },
+      label: {
+        fontSize: 13,
+        color: theme.textSecondary,
+        fontWeight: '600',
+        letterSpacing: 0.5,
+      },
+      value: {
+        fontSize: 16,
+        color: theme.textPrimary,
+        fontWeight: '500',
+        marginTop: 2,
+        marginBottom: 6,
+      },
+      verified: {
+        color: theme.accent,
+        fontWeight: '700',
+      },
+      attendeeToggle: {
+        marginTop: 8,
+        fontWeight: '600',
+        color: theme.accent,
+        textDecorationLine: 'underline',
+      },
+      section: {
+        backgroundColor: theme.cardBackground,
+        padding: 16,
+        borderRadius: 16,
+        marginBottom: 24,
+        borderWidth: 1,
+        borderColor: theme.surface,
+      },
+      modal: {
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
+      modalContent: {
+        backgroundColor: theme.surface,
+        padding: 24,
+        borderRadius: 12,
+        width: '90%',
+      },
+      modalTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: theme.textPrimary,
+        marginBottom: 16,
+      },
+      attendee: {
+        fontSize: 15,
+        color: theme.textPrimary,
+        marginBottom: 8,
+      },
+      closeButton: {
+        marginTop: 20,
+        backgroundColor: theme.buttonBackground,
+        paddingVertical: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+      },
+      closeButtonText: {
+        color: theme.buttonText,
+        fontWeight: '600',
+        fontSize: 15,
+      },
+    });
