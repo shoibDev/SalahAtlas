@@ -12,7 +12,13 @@ export default function ProtectedLayout() {
     return <Redirect href={"/login"} />
   }
   return (
-    <Stack>
+    <Stack
+        screenOptions={{
+          headerStyle: { backgroundColor: '#0D2B35' },
+          headerTintColor: '#F3E9E2',
+          headerTitleStyle: { fontWeight: '600' },
+        }}
+    >
       <Stack.Screen name="(tabs)" options={{headerShown: false}}/>
     </Stack>
   )

@@ -3,11 +3,9 @@ import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { useTheme } from '@/context/ThemeContext';
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
-
-const PRIMARY = '#1f2937';
-const SECONDARY = '#133383';
 
 const ICONS: Record<string, React.ComponentProps<typeof FontAwesome>['name']> = {
   compass: 'compass',
@@ -16,11 +14,12 @@ const ICONS: Record<string, React.ComponentProps<typeof FontAwesome>['name']> = 
 };
 
 const CustomNavBar: React.FC<BottomTabBarProps> = ({ state, navigation }) => {
+  const theme = useTheme();
+
   return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
         {state.routes.map((route, index) => {
           const isFocused = state.index === index;
-          const iconColor = isFocused ? PRIMARY : SECONDARY;
 
           const onPress = () => {
             if (!isFocused) {
@@ -35,15 +34,21 @@ const CustomNavBar: React.FC<BottomTabBarProps> = ({ state, navigation }) => {
                   layout={LinearTransition.springify()}
                   style={[
                     styles.tabItem,
-                    { backgroundColor: isFocused ? SECONDARY : 'transparent' },
+                    {
+                      backgroundColor: isFocused ? theme.accent : 'transparent',
+                    },
                   ]}
               >
                 <FontAwesome
                     name={ICONS[route.name] ?? 'circle'}
                     size={24}
-                    color={iconColor}
+                    color={isFocused ? theme.surface : theme.textSecondary}
                 />
-                {isFocused && <Text style={styles.label}>{route.name}</Text>}
+                {isFocused && (
+                    <Text style={[styles.label, { color: theme.surface }]}>
+                      {route.name}
+                    </Text>
+                )}
               </AnimatedTouchable>
           );
         })}
@@ -60,7 +65,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: PRIMARY,
     borderRadius: 40,
     paddingHorizontal: 12,
     paddingVertical: 15,
@@ -77,7 +81,6 @@ const styles = StyleSheet.create({
     borderRadius: 30,
   },
   label: {
-    color: '#fff',
     marginLeft: 8,
     fontSize: 14,
     textTransform: 'capitalize',

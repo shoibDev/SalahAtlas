@@ -1,6 +1,7 @@
 import apiClient from "@/api/apiClient";
 import { API_END_POINTS } from "@/constants/apiEndPoints";
-import {JummahCreateRequest, JummahMapResponse} from "@/types/JummahTypes";
+import {JummahCreateRequest, JummahMapResponse} from "@/types/jummah";
+import { JummahDetail} from "@/types/jummah";
 
 export const createJummah = async (jummah: JummahCreateRequest) => {
   try {
@@ -27,3 +28,14 @@ export const getNearbyJummah = async (
     throw error;
   }
 };
+
+export const getJummahDetail = async (jummahId: string): Promise<JummahDetail> => {
+try {
+    const response = await apiClient.get(`${API_END_POINTS.GET_JUMMAH_DETAILS}/${jummahId}`);
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching Jummah details:", error);
+    throw error;
+  }
+
+}

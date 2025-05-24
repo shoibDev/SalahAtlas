@@ -6,15 +6,18 @@ import {
   ActivityIndicator,
   Animated,
   Easing,
+  ImageBackground
 } from 'react-native';
 import * as Location from 'expo-location';
 import * as Haptics from 'expo-haptics';
 import { getQiblaDirection } from '@/utils/qibla';
+import { useTheme } from '@/context/ThemeContext';
 
 const COMPASS_SIZE = 250;
 const MARKER_SIZE = 24;
 
 export default function CompassScreen() {
+  const theme = useTheme();
   const [heading, setHeading] = useState(0);
   const [qiblaDirection, setQiblaDirection] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
@@ -22,6 +25,7 @@ export default function CompassScreen() {
 
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const animRef = useRef<Animated.CompositeAnimation | null>(null);
+  const CaliCircle = require('@/assets/images/cali_arab.png');
 
   useEffect(() => {
     let headingSub: Location.LocationSubscription;
@@ -96,8 +100,8 @@ export default function CompassScreen() {
 
   if (loading || qiblaDirection === null) {
     return (
-        <View style={styles.loader}>
-          <ActivityIndicator size="large" color="#00ffcc" />
+        <View style={[styles.loader, { backgroundColor: theme.background }]}>
+          <ActivityIndicator size="large" color={theme.accent} />
         </View>
     );
   }
@@ -105,51 +109,63 @@ export default function CompassScreen() {
   const angleToQibla = ((qiblaDirection - heading + 360) % 360) - 90;
   const angleRad = angleToQibla * (Math.PI / 180);
   const radius = COMPASS_SIZE / 2 - 30;
-
   const markerX = Math.cos(angleRad) * radius;
   const markerY = Math.sin(angleRad) * radius;
 
   return (
-      <View style={styles.container}>
-        <Text style={styles.header}>Qibla Direction</Text>
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <Text style={[styles.header, { color: theme.textPrimary }]}>Qibla Direction</Text>
 
-        <View style={styles.glowCircleWrapper}>
-          <View style={styles.compassRing}>
-            <Animated.View
+        <View style={[styles.glowCircleWrapper, { shadowColor: theme.accent }]}>
+          <ImageBackground
+              source={CaliCircle}
+              style={styles.calligraphyWrapper}
+              imageStyle={styles.calligraphyImage}
+          >
+            <View
                 style={[
-                  styles.qiblaMarker,
+                  styles.compassRing,
                   {
-                    transform: [{ scale: scaleAnim }],
-                    left: COMPASS_SIZE / 2 + markerX - MARKER_SIZE / 2,
-                    top: COMPASS_SIZE / 2 + markerY - MARKER_SIZE / 2,
-                    shadowColor: isExactQibla ? '#6d95e7' : 'transparent',
-                    shadowOpacity: isExactQibla ? 1 : 0,
-                    shadowRadius: isExactQibla ? 12 : 0,
+                    backgroundColor: theme.surface,
+                    borderColor: theme.accent,
                   },
                 ]}
-            />
-          </View>
+            >
+              <Animated.View
+                  style={[
+                    styles.qiblaMarker,
+                    {
+                      transform: [{ scale: scaleAnim }],
+                      left: COMPASS_SIZE / 2 + markerX - MARKER_SIZE / 2,
+                      top: COMPASS_SIZE / 2 + markerY - MARKER_SIZE / 2,
+                      backgroundColor: theme.accent,
+                      shadowColor: isExactQibla ? theme.accent : 'transparent',
+                      shadowOpacity: isExactQibla ? 1 : 0,
+                      shadowRadius: isExactQibla ? 12 : 0,
+                    },
+                  ]}
+              />
+            </View>
+          </ImageBackground>
         </View>
 
-        <View style={styles.infoContainer}>
-
-          <Text style={styles.label}>Your Heading</Text>
-          <Text style={styles.value}>{Math.round(heading)}°</Text>
-
-          <Text style={styles.label}>Qibla From North</Text>
-          <Text style={styles.value}>{Math.round(qiblaDirection)}°</Text>
+        <View style={styles.infoRow}>
+          <View style={styles.infoBox}>
+            <Text style={[styles.label, { color: theme.textSecondary }]}>Your Heading</Text>
+            <Text style={[styles.value, { color: theme.textPrimary }]}>{Math.round(heading)}°</Text>
+          </View>
+          <View style={styles.infoBox}>
+            <Text style={[styles.label, { color: theme.textSecondary }]}>Qibla From North</Text>
+            <Text style={[styles.value, { color: theme.textPrimary }]}>{Math.round(qiblaDirection)}°</Text>
+          </View>
         </View>
       </View>
   );
 }
 
-const PRIMARY_COLOUR = '#1f2937';
-const SECONDARY_COLOUR = '#133383';
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: PRIMARY_COLOUR,
     paddingTop: 150,
     paddingHorizontal: 20,
     alignItems: 'center',
@@ -157,13 +173,11 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#ffffff',
     marginBottom: 16,
     letterSpacing: 0.5,
     textAlign: 'center',
   },
   glowCircleWrapper: {
-    shadowColor: SECONDARY_COLOUR,
     shadowOpacity: 0.3,
     shadowRadius: 50,
     shadowOffset: { width: 0, height: 0 },
@@ -174,9 +188,7 @@ const styles = StyleSheet.create({
     width: COMPASS_SIZE,
     height: COMPASS_SIZE,
     borderRadius: COMPASS_SIZE / 2,
-    backgroundColor: '#1e293b', // subtle inner ring
     borderWidth: 3,
-    borderColor: SECONDARY_COLOUR,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
@@ -186,49 +198,43 @@ const styles = StyleSheet.create({
     width: MARKER_SIZE,
     height: MARKER_SIZE,
     borderRadius: MARKER_SIZE / 2,
-    backgroundColor: SECONDARY_COLOUR,
     borderWidth: 2,
     borderColor: '#ffffff',
-    shadowColor: SECONDARY_COLOUR,
     shadowOpacity: 0.8,
-    shadowRadius: 10,
     elevation: 10,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 40,
+    marginTop: 10,
+  },
+  infoBox: {
+    alignItems: 'center',
   },
   infoContainer: {
     alignItems: 'center',
   },
-  qiblaCard: {
-    backgroundColor: 'rgba(19, 51, 131, 0.15)',
-    borderColor: SECONDARY_COLOUR,
-    borderWidth: 1,
-    borderRadius: 20,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    marginBottom: 30,
-    shadowColor: SECONDARY_COLOUR,
-    shadowOpacity: 0.4,
-    shadowRadius: 15,
-    elevation: 8,
-  },
-  qiblaCardText: {
-    color: SECONDARY_COLOUR,
-    fontSize: 18,
-    fontWeight: '600',
-  },
   label: {
     fontSize: 16,
-    color: '#cbd5e1',
-    marginTop: 10,
   },
   value: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#ffffff',
     marginBottom: 10,
   },
   loader: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  calligraphyWrapper: {
+    width: COMPASS_SIZE + 130,
+    height: COMPASS_SIZE + 130,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  calligraphyImage: {
+    resizeMode: 'contain',
   },
 });
