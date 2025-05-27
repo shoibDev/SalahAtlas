@@ -27,7 +27,7 @@ export default function LoginScreen() {
   const { logIn } = useContext(AuthContext);
   const theme = useTheme();
 
-  const [form, setForm] = useState({ email: "test@example.com", password: "test" });
+  const [form, setForm] = useState({ email: "shoibwahab001@gmail.com", password: "test" });
   const [showPassword, setShowPassword] = useState(false);
   const shiftAnim = useRef(new RNAnimated.Value(0)).current;
 
