@@ -3,24 +3,34 @@ spring:
     name: project-backend
 
   datasource:
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    url: jdbc:postgresql://localhost:5432/islamdb
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: 1234
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create-drop
     show-sql: true
-    database-platform: org.hibernate.dialect.H2Dialect
 
-  h2:
-    console:
-      enabled: true
-      path: /h2-console   # Optional: set the URL path
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: sediq1973@gmail.com          # replace with your Gmail
+    password: jalf lelu gdyo rmmb             # use an App Password, not your Gmail password
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
 
 
 security:
   jwt:
     secret-key: 3cfa76ef14937c1c0ea519f8fc057a80fcd04a7420f8e8bcd0a7567c272e007b
     expiration-ms: 86400000
+
+frontend:
+  verification-url: https://yourfrontend.com/verify   # Replace with your actual deployed React route

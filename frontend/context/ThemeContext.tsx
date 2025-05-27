@@ -12,6 +12,7 @@ export const colors = {
   cardBackground: '#122E38',
   buttonBackground: '#C9886B',
   buttonText: '#FFFFFF',
+  placeholder: '#7A9CA4', // ✅ Added for input placeholders
 };
 
 type Theme = typeof colors;

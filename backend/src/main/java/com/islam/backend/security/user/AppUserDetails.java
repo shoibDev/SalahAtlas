@@ -1,22 +1,22 @@
 package com.islam.backend.security.user;
 
 import com.islam.backend.domain.entities.AccountEntity;
+import jakarta.persistence.Column;
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
 public class AppUserDetails implements UserDetails {
 
+    @Getter
     private final AccountEntity account;
 
     public AppUserDetails(AccountEntity account) {
         this.account = account;
-    }
-
-    public AccountEntity getAccount() {
-        return account;
     }
 
     @Override
@@ -51,6 +51,6 @@ public class AppUserDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return account.isEnabled();
     }
 }

@@ -4,6 +4,8 @@ import com.islam.backend.domain.entities.ChatMessageEntity;
 import com.islam.backend.repositories.JummahRepository;
 import com.islam.backend.websocket.repositories.ChatMessageRepository;
 import com.islam.backend.websocket.services.ChatMessageService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,5 +29,10 @@ public class ChatMessageServiceImpl implements ChatMessageService {
     @Override
     public Optional<List<ChatMessageEntity>> getHistoryByJummahId(UUID jummahId) {
         return Optional.of(chatMessageRepository.findByJummahIdOrderByTimestampDesc(jummahId));
+    }
+
+    @Override
+    public Page<ChatMessageEntity> getHistoryByJummahIdPageable(UUID jummahId, Pageable pageable) {
+        return chatMessageRepository.findByJummahIdOrderByTimestampDesc(jummahId, pageable);
     }
 }
