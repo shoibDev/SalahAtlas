@@ -1,33 +1,59 @@
-import { useRouter } from "expo-router";
+// ─── 1. React & Core ────────────────────────────────────────
 import React, { useContext, useEffect, useRef, useState } from "react";
 import {
-  Text,
-  View,
-  TextInput,
-  StyleSheet,
-  TouchableOpacity,
-  Dimensions,
-  Keyboard,
-  TouchableWithoutFeedback,
   Animated as RNAnimated,
-  ImageBackground
+  Dimensions,
+  ImageBackground,
+  Keyboard,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { AuthContext } from "@/context/authContext";
+
+// ─── 2. Navigation & Forms ──────────────────────────────────
+import { useRouter } from "expo-router";
+import { useForm, Controller, Resolver } from "react-hook-form";
+
+// ─── 3. Animations & Icons ──────────────────────────────────
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { validateLogin } from "@/validation/login";
+
+// ─── 4. Contexts ────────────────────────────────────────────
+import { AuthContext } from "@/context/authContext";
 import { useTheme } from "@/context/ThemeContext";
 
+// ─── 5. Types ───────────────────────────────────────────────
+import { LoginRequest } from "@/types/auth";
+
+// ─── 6. Constants ───────────────────────────────────────────
 const { width } = Dimensions.get("window");
 
+const resolver: Resolver<LoginRequest> = async (values) => {
+  const errors: any = {};
+  if (!values.email) {
+    errors.email = { type: "required", message: "Email is required" };
+  }
+  if (!values.password) {
+    errors.password = { type: "required", message: "Password is required" };
+  }
+
+  return {
+    values: Object.keys(errors).length === 0 ? values : {},
+    errors,
+  };
+};
+
 export default function LoginScreen() {
+
   const router = useRouter();
   const { logIn } = useContext(AuthContext);
   const theme = useTheme();
+  const { control, handleSubmit, formState: { errors } } = useForm<LoginRequest>({resolver})
 
-  const [form, setForm] = useState({ email: "shoibwahab001@gmail.com", password: "test" });
   const [showPassword, setShowPassword] = useState(false);
   const shiftAnim = useRef(new RNAnimated.Value(0)).current;
 
@@ -54,29 +80,21 @@ export default function LoginScreen() {
     };
   }, []);
 
-  const handleChange = (key: keyof typeof form, value: string) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  };
 
-  const handleSubmit = async () => {
-    const errors = validateLogin(form);
-    if (errors.length > 0) {
-      console.log("Validation error:", errors[0]);
-      return;
-    }
-
+  const onSubmit = async (data: LoginRequest) => {
     try {
-      await logIn(form.email, form.password);
+      await logIn(data);
       router.replace("/");
     } catch (err: any) {
       console.log("Login failed:", err?.response?.data?.message || err.message || "Unknown error");
     }
   };
 
+
   return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <ImageBackground
-            source={theme.backgroundTexture}
+            source={theme.absurdityTexture}
             style={styles.container}
             resizeMode="repeat" // or "cover" if you want full screen stretch
         >
@@ -99,36 +117,50 @@ export default function LoginScreen() {
 
             {/* Inputs */}
             <Animated.View entering={FadeInUp.delay(400)} style={styles.inputWrapper}>
-              <TextInput
-                  placeholder="Email"
-                  placeholderTextColor={theme.textSecondary}
-                  style={[styles.input, { backgroundColor: theme.surface, color: theme.background }]}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  value={form.email}
-                  onChangeText={(text) => handleChange("email", text)}
+              <Controller
+                  control={control}
+                  name="email"
+                  render={({ field: { onChange, value } }) => (
+                      <TextInput
+                          placeholder="Email"
+                          placeholderTextColor={theme.textSecondary}
+                          style={[styles.input, { backgroundColor: theme.surface, color: theme.background }]}
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                          onChangeText={onChange}
+                          value={value}
+                      />
+                  )}
               />
+              {errors.email && <Text style={{ color: 'red' }}>{errors.email.message}</Text>}
 
-              <View style={[styles.passwordContainer, { backgroundColor: theme.surface }]}>
-                <TextInput
-                    placeholder="Password"
-                    placeholderTextColor={theme.textSecondary}
-                    secureTextEntry={!showPassword}
-                    style={[styles.input, { flex: 1, marginBottom: 0, backgroundColor: 'transparent', color: theme.background }]}
-                    value={form.password}
-                    onChangeText={(text) => handleChange("password", text)}
-                />
-                <TouchableOpacity onPress={() => setShowPassword((prev) => !prev)} style={{ marginLeft: 10 }}>
-                  <FontAwesome name={showPassword ? "eye" : "eye-slash"} size={20} color={theme.textSecondary} />
-                </TouchableOpacity>
-              </View>
+              <Controller
+                  control={control}
+                  name="password"
+                  render={({ field: { onChange, value } }) => (
+                      <View style={[styles.passwordContainer, { backgroundColor: theme.surface }]}>
+                        <TextInput
+                            placeholder="Password"
+                            placeholderTextColor={theme.textSecondary}
+                            secureTextEntry={!showPassword}
+                            style={[styles.input, { flex: 1, marginBottom: 0, backgroundColor: 'transparent', color: theme.background }]}
+                            onChangeText={onChange}
+                            value={value}
+                        />
+                        <TouchableOpacity onPress={() => setShowPassword((prev) => !prev)} style={{ marginLeft: 10 }}>
+                          <FontAwesome name={showPassword ? "eye" : "eye-slash"} size={20} color={theme.textSecondary} />
+                        </TouchableOpacity>
+                      </View>
+                  )}
+              />
+              {errors.password && <Text style={{ color: 'red' }}>{errors.password.message}</Text>}
             </Animated.View>
 
             {/* Button */}
             <Animated.View entering={FadeInUp.delay(600)}>
               <TouchableOpacity
                   style={[styles.button, { backgroundColor: theme.accent, shadowColor: theme.accent }]}
-                  onPress={handleSubmit}
+                  onPress={handleSubmit(onSubmit)}
               >
                 <Text style={[styles.buttonText, { color: theme.buttonText }]}>Login</Text>
               </TouchableOpacity>

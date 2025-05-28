@@ -6,19 +6,22 @@ import React, {
   useContext,
 } from 'react';
 import { useRouter } from 'expo-router';
-import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
+import {LoginRequest} from "@/types/auth";
+import {login} from "@/api/authApi";
 
 type AuthState = {
   isLoggedIn: boolean;
   token: string | null;
-  logIn: (email: string, password: string) => Promise<void>;
+  userId: string | null;
+  logIn: (request: LoginRequest) => Promise<void>;
   logOut: () => void;
 };
 
 export const AuthContext = createContext<AuthState>({
   isLoggedIn: false,
   token: null,
+  userId: null,
   logIn: async () => {},
   logOut: () => {},
 });
@@ -26,38 +29,36 @@ export const AuthContext = createContext<AuthState>({
 export function AuthProvider({ children }: PropsWithChildren) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [token, setToken] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const router = useRouter();
 
-  // Load token on app start
+  // Load token and user ID on app start
   useEffect(() => {
     const restoreSession = async () => {
       const storedToken = await SecureStore.getItemAsync('accessToken');
+      const storedUserId = await SecureStore.getItemAsync('userId');
       if (storedToken) {
         setToken(storedToken);
+        setUserId(storedUserId);
         setIsLoggedIn(true);
       }
     };
     restoreSession();
   }, []);
 
-  const logIn = async (email: string, password: string) => {
+  const logIn = async (request: LoginRequest) => {
     try {
-      console.log('Logging in with:', { email, password });
-
-      const res = await axios.post('http://192.168.0.35:8080/auth/login', {
-        email,
-        password,
-      });
-
-      const { accessToken, refreshToken } = res.data.data;
+      const { accessToken, refreshToken, userId } = await login(request);
 
       await SecureStore.setItemAsync('accessToken', accessToken);
       await SecureStore.setItemAsync('refreshToken', refreshToken);
+      await SecureStore.setItemAsync('userId', userId);
 
       setToken(accessToken);
+      setUserId(userId);
       setIsLoggedIn(true);
 
-      console.log('Login successful. Token stored.');
+      console.log('Login successful. Token and user ID stored.');
       router.replace('/(protected)/(tabs)');
     } catch (err: any) {
       console.error('Login failed:', err.message);
@@ -67,12 +68,14 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const logOut = async () => {
     await SecureStore.deleteItemAsync('accessToken');
     await SecureStore.deleteItemAsync('refreshToken');
+    await SecureStore.deleteItemAsync('userId');
     setToken(null);
+    setUserId(null);
     setIsLoggedIn(false);
   };
 
   return (
-      <AuthContext.Provider value={{ isLoggedIn, token, logIn, logOut }}>
+      <AuthContext.Provider value={{ isLoggedIn, token, userId, logIn, logOut }}>
         {children}
       </AuthContext.Provider>
   );

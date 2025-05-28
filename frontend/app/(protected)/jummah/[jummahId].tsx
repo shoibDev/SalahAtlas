@@ -6,16 +6,18 @@ import {
   StyleSheet,
   ActivityIndicator,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import Modal from 'react-native-modal';
 import JummahChat from '@/components/chat/JummahChat';
 import ChatPreview from '@/components/chat/ChatPreview';
 import {ChatProvider} from "@/context/ChatContext";
 import {useAuth} from "@/context/authContext";
 import { JummahDetail } from '@/types/jummah';
-import { getJummahDetail } from '@/api/jummah';
+import { getJummahDetail, joinJummah, leaveJummah, removeAttendee, deleteJummah } from '@/api/jummahApi';
 import { useTheme } from '@/context/ThemeContext';
-
+import { useRouter } from 'expo-router';
 
 export default function JummahDetailScreen() {
   const theme = useTheme();
@@ -24,12 +26,109 @@ export default function JummahDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<JummahDetail | null>(null);
   const [isAttendeeModalVisible, setAttendeeModalVisible] = useState(false);
+  const [isDeleteModalVisible, setDeleteModalVisible] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const user = { name: 'MobileUser' }; // TODO: Replace with actual auth context
+  const router = useRouter();
 
-  const { token } = useAuth();
+  const { token, userId } = useAuth();
 
+  // Use the real user ID from AuthContext
+  const currentUserId = userId || "";
+
+
+  // Check if current user is the organizer
+  const isOrganizer = detail?.organizer?.id === currentUserId;
+
+  // Check if current user is an attendee
+  const isAttendee = detail?.attendees?.some(attendee => attendee.id === currentUserId);
+
+  // Handle joining a Jummah
+  const handleJoin = async () => {
+    if (!jummahId || isJoining) return;
+
+    setIsJoining(true);
+    try {
+      const success = await joinJummah(jummahId as string, currentUserId);
+      if (success) {
+        // Refresh the details to show updated attendee list
+        const data = await getJummahDetail(jummahId as string);
+        setDetail(data);
+        Alert.alert("Success", "You have joined this Jummah");
+      }
+    } catch (error) {
+      console.error("Failed to join Jummah:", error);
+      Alert.alert("Error", "Failed to join this Jummah");
+    } finally {
+      setIsJoining(false);
+    }
+  };
+
+  // Handle leaving a Jummah
+  const handleLeave = async () => {
+    if (!jummahId || isLeaving) return;
+
+    setIsLeaving(true);
+    try {
+      const success = await leaveJummah(jummahId as string, currentUserId);
+      if (success) {
+        // Refresh the details to show updated attendee list
+        const data = await getJummahDetail(jummahId as string);
+        setDetail(data);
+        Alert.alert("Success", "You have left this Jummah");
+      }
+    } catch (error) {
+      console.error("Failed to leave Jummah:", error);
+      Alert.alert("Error", "Failed to leave this Jummah");
+    } finally {
+      setIsLeaving(false);
+    }
+  };
+
+  // Handle removing an attendee (only for organizer)
+  const handleRemoveAttendee = async (attendeeId: string) => {
+    if (!jummahId || !isOrganizer) return;
+
+    try {
+      const success = await removeAttendee(jummahId as string, attendeeId);
+      if (success) {
+        // Refresh the details to show updated attendee list
+        const data = await getJummahDetail(jummahId as string);
+        setDetail(data);
+        Alert.alert("Success", "Attendee removed successfully");
+        setAttendeeModalVisible(false);
+      }
+    } catch (error) {
+      console.error("Failed to remove attendee:", error);
+      Alert.alert("Error", "Failed to remove attendee");
+    }
+  };
+
+  // Handle deleting a Jummah (only for organizer)
+  const handleDelete = async () => {
+    if (!jummahId || !isOrganizer || isDeleting) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteJummah(jummahId as string);
+      Alert.alert("Success", "Jummah deleted successfully");
+      router.back(); // Navigate back after deletion
+    } catch (error) {
+      console.error("Failed to delete Jummah:", error);
+      Alert.alert("Error", "Failed to delete Jummah");
+    } finally {
+      setIsDeleting(false);
+      setDeleteModalVisible(false);
+    }
+  };
+
+  // Show delete confirmation modal
+  const confirmDelete = () => {
+    setDeleteModalVisible(true);
+  };
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -93,17 +192,54 @@ export default function JummahDetailScreen() {
           <Text style={styles.value}>{detail!.notes || 'None'}</Text>
         </View>
 
+        {/* Join/Leave buttons (only for non-owners) */}
+        {!isOrganizer && (
+          <View style={styles.actionButtonsContainer}>
+            {!isAttendee ? (
+              <TouchableOpacity
+                style={[styles.actionButton, styles.joinButton]}
+                onPress={handleJoin}
+                disabled={isJoining}
+              >
+                <Text style={styles.actionButtonText}>
+                  {isJoining ? 'Joining...' : 'Join Jummah'}
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[styles.actionButton, styles.leaveButton]}
+                onPress={handleLeave}
+                disabled={isLeaving}
+              >
+                <Text style={styles.actionButtonText}>
+                  {isLeaving ? 'Leaving...' : 'Leave Jummah'}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+
+        {/* Delete button (only for owner) */}
+        {isOrganizer && (
+            <View style={{ alignItems: 'flex-end', marginBottom: 20 }}>
+              <TouchableOpacity onPress={() => setDeleteModalVisible(true)} style={styles.optionsIcon}>
+                <Ionicons name="ellipsis-vertical" size={20} color={theme.textSecondary} />
+              </TouchableOpacity>
+            </View>
+        )}
+
         <ChatProvider jummahId={jummahId as string}>
-          <ChatPreview onExpand={() => setChatOpen(true)} />
-          <JummahChat
-              visible={chatOpen}
-              onClose={() => setChatOpen(false)}
-              username={user.name}
-              token={token}
-              jummahId={jummahId as string}
+          <ChatPreview
+              onExpand={() =>
+                  router.push({
+                    pathname: '/(protected)/chat/[jummahId]',
+                    params: { jummahId: jummahId as string },
+                  })
+              }
           />
         </ChatProvider>
 
+        {/* Attendees Modal */}
         <Modal
             isVisible={isAttendeeModalVisible}
             onBackdropPress={closeAttendees}
@@ -116,16 +252,62 @@ export default function JummahDetailScreen() {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Attendees</Text>
             {detail!.attendees.map((a: any) => (
-                <Text key={a.id} style={styles.attendee}>
-                  • {a.firstName} {a.lastName}
-                  {a.verified && (
-                      <Text style={styles.verified}> • Verified</Text>
+                <View key={a.id} style={styles.attendeeRow}>
+                  <Text style={styles.attendee}>
+                    • {a.firstName} {a.lastName}
+                    {a.verified && (
+                        <Text style={styles.verified}> • Verified</Text>
+                    )}
+                  </Text>
+                  {/* Remove button (only for organizer) */}
+                  {isOrganizer && a.id !== detail!.organizer.id && (
+                    <TouchableOpacity
+                      style={styles.removeButton}
+                      onPress={() => handleRemoveAttendee(a.id)}
+                    >
+                      <Ionicons name="remove-circle-outline" size={20} color={theme.textSecondary} />
+                    </TouchableOpacity>
                   )}
-                </Text>
+                </View>
             ))}
             <TouchableOpacity onPress={closeAttendees} style={styles.closeButton}>
               <Text style={styles.closeButtonText}>Close</Text>
             </TouchableOpacity>
+          </View>
+        </Modal>
+
+        {/* Delete Confirmation Modal */}
+        <Modal
+            isVisible={isDeleteModalVisible}
+            onBackdropPress={() => setDeleteModalVisible(false)}
+            onBackButtonPress={() => setDeleteModalVisible(false)}
+            useNativeDriverForBackdrop
+            backdropColor="#000"
+            backdropOpacity={0.6}
+            style={styles.modal}
+        >
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Delete Jummah</Text>
+            <Text style={styles.modalText}>
+              Are you sure you want to delete this Jummah? This action cannot be undone.
+            </Text>
+            <View style={styles.modalButtonsContainer}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setDeleteModalVisible(false)}
+              >
+                <Text style={styles.modalButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.confirmButton]}
+                onPress={handleDelete}
+                disabled={isDeleting}
+              >
+                <Text style={styles.modalButtonText}>
+                  {isDeleting ? 'Deleting...' : 'Delete'}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </Modal>
       </View>
@@ -199,6 +381,59 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
         borderWidth: 1,
         borderColor: theme.surface,
       },
+      // Action buttons styles
+      actionButtonsContainer: {
+        marginBottom: 20,
+      },
+      actionButton: {
+        paddingVertical: 14,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 2 },
+        elevation: 2,
+      },
+      joinButton: {
+        backgroundColor: '#4CAF50', // Green
+      },
+      leaveButton: {
+        backgroundColor: '#FF9800', // Orange
+      },
+      deleteButton: {
+        backgroundColor: '#F44336', // Red
+      },
+      actionButtonText: {
+        color: 'white',
+        fontWeight: '600',
+        fontSize: 16,
+      },
+      // Attendee row styles
+      attendeeRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 8,
+      },
+      attendee: {
+        fontSize: 15,
+        color: theme.textPrimary,
+        flex: 1,
+      },
+      removeButton: {
+        backgroundColor: '#F44336', // Red
+        paddingVertical: 6,
+        paddingHorizontal: 10,
+        borderRadius: 6,
+      },
+      removeButtonText: {
+        color: 'white',
+        fontWeight: '600',
+        fontSize: 12,
+      },
+      // Modal styles
       modal: {
         justifyContent: 'center',
         alignItems: 'center',
@@ -207,7 +442,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
         backgroundColor: theme.surface,
         padding: 24,
         borderRadius: 12,
-        width: '90%',
+        width: '100%',
       },
       modalTitle: {
         fontSize: 18,
@@ -215,10 +450,32 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
         color: theme.textPrimary,
         marginBottom: 16,
       },
-      attendee: {
+      modalText: {
         fontSize: 15,
         color: theme.textPrimary,
-        marginBottom: 8,
+        marginBottom: 20,
+      },
+      modalButtonsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+      },
+      modalButton: {
+        flex: 1,
+        paddingVertical: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginHorizontal: 5,
+      },
+      cancelButton: {
+        backgroundColor: '#757575', // Gray
+      },
+      confirmButton: {
+        backgroundColor: '#F44336', // Red
+      },
+      modalButtonText: {
+        color: 'white',
+        fontWeight: '600',
+        fontSize: 15,
       },
       closeButton: {
         marginTop: 20,
@@ -231,5 +488,15 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
         color: theme.buttonText,
         fontWeight: '600',
         fontSize: 15,
+      },
+      optionsIcon: {
+        padding: 6,
+        borderRadius: 20,
+        backgroundColor: theme.cardBackground,
+        borderWidth: 1,
+        borderColor: theme.surface,
+      },
+      removeButton: {
+        padding: 6,
       },
     });

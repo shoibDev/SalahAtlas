@@ -43,9 +43,9 @@ export default function ThemeScreen() {
 
   return (
       <ImageBackground
-          source={theme.blackThreadBackground}
+          source={theme.absurdityTexture}
           style={styles.screen}
-          imageStyle={{ opacity: 1.05 }}
+          imageStyle={{ opacity: 0.1 }}
           resizeMode="cover"
       >
         <View style={styles.card}>
