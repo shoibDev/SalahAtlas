@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Verify Your Email - SalahAtlas</title>
+    <style>
+        body {
+            background-color: #0D2B35;
+            color: #F3E9E2;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background-color: #122E38;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.35);
+            text-align: center;
+        }
+
+        .header {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            color: #FFAD66;
+        }
+
+        .arabic {
+            font-size: 2rem;
+            color: #C9886B;
+            margin-bottom: 1rem;
+            font-family: 'Scheherazade', serif;
+        }
+
+        .token-box {
+            font-size: 1.5rem;
+            background-color: #1F3A43;
+            padding: 1rem;
+            border-radius: 10px;
+            color: #F3E9E2;
+            letter-spacing: 2px;
+            font-weight: bold;
+            margin: 1.5rem 0;
+        }
+
+        .footer {
+            font-size: 0.85rem;
+            margin-top: 2rem;
+            color: #aaa;
+        }
+
+        a {
+            color: #FFAD66;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="arabic">بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيمِ</div>
+
+    <div class="header">Welcome to SalahAtlas</div>
+
+    <p th:text="'Hi ' + ${name} + ','">Hi there,</p>
+
+    <p>Thanks for signing up for <strong>SalahAtlas</strong>.</p>
+    <p>To complete your registration, please copy the verification code below and paste it into the app:</p>
+
+    <div class="token-box" th:text="${verificationCode}">123456</div>
+
+    <p>If you didn’t sign up for this account, you can safely ignore this email.</p>
+
+    <div class="footer">
+        Sent with peace and purpose from SalahAtlas<br/>
+    </div>
+</div>
+</body>
+</html>

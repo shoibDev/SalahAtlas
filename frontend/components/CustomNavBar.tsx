@@ -1,105 +1,75 @@
-import {View, StyleSheet, TouchableOpacity} from 'react-native';
-import { useLinkBuilder, useTheme } from '@react-navigation/native';
-import { Text, PlatformPressable } from '@react-navigation/elements';
-import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import React from "react";
+import React from 'react';
+import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import Animated, {FadeIn, LinearTransition} from "react-native-reanimated";
+import Animated, { LinearTransition } from 'react-native-reanimated';
+import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { useTheme } from '@/context/ThemeContext';
 
-const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
-const PRIMARY_COLOUR = '#1f2937';
-const SECONDARY_COLOUR = '#133383';
+const ICONS: Record<string, React.ComponentProps<typeof FontAwesome>['name']> = {
+  compass: 'compass',
+  index: 'home',
+  settings: 'cog',
+};
 
-
-const CustomNavBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigation }) => {
-  const { colors } = useTheme();
-  const { buildHref } = useLinkBuilder();
+const CustomNavBar: React.FC<BottomTabBarProps> = ({ state, navigation }) => {
+  const theme = useTheme();
 
   return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
         {state.routes.map((route, index) => {
-          const { options } = descriptors[route.key];
-          const label =
-              options.tabBarLabel !== undefined
-                  ? options.tabBarLabel
-                  : options.title !== undefined
-                      ? options.title
-                      : route.name;
-
           const isFocused = state.index === index;
 
           const onPress = () => {
-            const event = navigation.emit({
-              type: 'tabPress',
-              target: route.key,
-              canPreventDefault: true,
-            });
-
-            if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name, route.params);
+            if (!isFocused) {
+              navigation.navigate(route.name);
             }
           };
 
           return (
-              <AnimatedTouchableOpacity
-                  layout={LinearTransition.springify()}
+              <AnimatedTouchable
                   key={route.key}
                   onPress={onPress}
-                  style={[styles.tabItem, {backgroundColor: isFocused ? SECONDARY_COLOUR : 'transparent'}]}
+                  layout={LinearTransition.springify()}
+                  style={[
+                    styles.tabItem,
+                    {
+                      backgroundColor: isFocused ? theme.accent : 'transparent',
+                    },
+                  ]}
               >
-                {getTabBarIcon(route.name, isFocused ? PRIMARY_COLOUR : SECONDARY_COLOUR)}
+                <FontAwesome
+                    name={ICONS[route.name] ?? 'circle'}
+                    size={24}
+                    color={isFocused ? theme.surface : theme.textSecondary}
+                />
                 {isFocused && (
-                  <Animated.Text
-                      style={styles.text}
-                  >
-                    {label as string}
-                  </Animated.Text>
+                    <Text style={[styles.label, { color: theme.surface }]}>
+                      {route.name}
+                    </Text>
                 )}
-              </AnimatedTouchableOpacity>
+              </AnimatedTouchable>
           );
         })}
       </View>
   );
-
-  function getTabBarIcon(routeName: string, colour: string) {
-    let iconName: React.ComponentProps<typeof FontAwesome>['name'];
-
-    switch (routeName) {
-      case 'compass':
-        iconName = 'compass';
-        break;
-      case 'dashboard':
-        iconName = 'home';
-        break;
-      case 'settings':
-        iconName = 'cog';
-        break;
-      default:
-        iconName = 'circle';
-    }
-    return <FontAwesome name={iconName} size={24} color={colour} />;
-  }
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    backgroundColor: PRIMARY_COLOUR,
+    bottom: 40,
+    alignSelf: 'center',
+    width: '80%',
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    width: '80%',
-    alignSelf: 'center',
-    bottom: 40,
     borderRadius: 40,
     paddingHorizontal: 12,
     paddingVertical: 15,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
@@ -110,10 +80,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 25,
     borderRadius: 30,
   },
-  text: {
-    color: 'white',
+  label: {
     marginLeft: 8,
-  }
+    fontSize: 14,
+    textTransform: 'capitalize',
+  },
 });
 
 export default CustomNavBar;

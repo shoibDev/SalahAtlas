@@ -6,14 +6,31 @@ spring:
     url: jdbc:postgresql://localhost:5432/islamdb
     driver-class-name: org.postgresql.Driver
     username: postgres
-    password: pass
+    password: 1234
 
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: sediq1973@gmail.com          # replace with your Gmail
+    password: jalf lelu gdyo rmmb             # use an App Password, not your Gmail password
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+
 security:
   jwt:
-    secret-key: ${JWT_SECRET_KEY}
-    expiration-ms: ${JWT_EXPIRATION_MS}
+    secret-key: 3cfa76ef14937c1c0ea519f8fc057a80fcd04a7420f8e8bcd0a7567c272e007b
+    expiration-ms: 86400000
+
+frontend:
+  verification-url: https://yourfrontend.com/verify   # Replace with your actual deployed React route

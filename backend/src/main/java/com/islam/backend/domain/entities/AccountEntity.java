@@ -9,11 +9,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,7 +21,8 @@ import java.util.UUID;
 @Builder
 @Entity
 @Table(name = "accounts")
-public class AccountEntity implements UserDetails {
+@EntityListeners(AuditingEntityListener.class)
+public class AccountEntity {
 
     @Id
     @GeneratedValue
@@ -42,6 +41,7 @@ public class AccountEntity implements UserDetails {
     private String lastName;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Gender gender;
 
     @CreatedDate
@@ -50,44 +50,32 @@ public class AccountEntity implements UserDetails {
     @Embedded
     private Geolocation geolocation;
 
-    @OneToMany(mappedBy = "organizer")
-    private List<JummahEntity> organizedJummahs;
+    private boolean enabled = false;
 
-    @ManyToMany(mappedBy = "attendees")
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private boolean verified;
+
+    @ManyToMany(mappedBy = "attendees", fetch = FetchType.LAZY)
     private List<JummahEntity> attendingJummahs;
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
-    }
+    @Column(name = "verification_token")
+    private String verificationToken;
 
-    @Override
-    public String getPassword() {
-        return this.password;
-    }
+    @Column(name = "verification_code")
+    private String verificationCode;
 
-    @Override
-    public String getUsername() {
-        return this.email;
-    }
+    @Column(name = "verification_token_expiry")
+    private LocalDateTime verificationTokenExpiry;
 
-    @Override
-    public boolean isAccountNonExpired() {
-        return UserDetails.super.isAccountNonExpired();
-    }
+    @Column(name = "verification_attempts", columnDefinition = "INTEGER DEFAULT 0")
+    private Integer verificationAttempts = 0;
 
-    @Override
-    public boolean isAccountNonLocked() {
-        return UserDetails.super.isAccountNonLocked();
-    }
+    @Column(name = "last_failed_verification")
+    private LocalDateTime lastFailedVerification;
 
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return UserDetails.super.isCredentialsNonExpired();
-    }
+    @Column(name = "verification_locked", columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private boolean verificationLocked = false;
 
-    @Override
-    public boolean isEnabled() {
-        return UserDetails.super.isEnabled();
-    }
+    @Column(name = "verification_lock_expiry")
+    private LocalDateTime verificationLockExpiry;
 }
