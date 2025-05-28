@@ -1,77 +1,91 @@
-import { useEffect, useRef, useState } from 'react';
-import { Client } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
-import { ChatMessage } from '@/types/chat';
+import { useEffect, useState } from 'react';
+import { ChatMessage, ChatTextMessage } from '@/types/chat';
+import { useWebSocket } from '@/context/WebSocketContext';
+import { API_END_POINTS } from '@/constants/apiEndPoints';
 
-export function useJummahChatConnection({
-                                          visible,
-                                          token,
-                                          jummahId,
-                                          username,
-                                          onMessage,
-                                        }: {
+/**
+ * Interface for useJummahChat hook parameters
+ */
+interface UseJummahChatParams {
   visible: boolean;
   token: string;
   jummahId: string;
   username: string;
   onMessage: (msg: ChatMessage) => void;
-}) {
-  const clientRef = useRef<Client | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
+}
 
+/**
+ * Hook for managing Jummah chat WebSocket connection
+ * @param params - Parameters for the hook
+ * @returns Object containing connection status and send function
+ */
+export function useJummahChat({
+  visible,
+  token,
+  jummahId,
+  username,
+  onMessage,
+}: UseJummahChatParams) {
+  const { client, isConnected, connect, disconnect } = useWebSocket();
+  const [isSubscribed, setIsSubscribed] = useState(false);
+
+  // We don't connect to WebSocket here anymore
+  // The connection is established by the AuthWithWebSocketHandler in the protected layout
+  // This prevents redundant connection attempts
+
+  // Subscribe to Jummah topic when connected
   useEffect(() => {
-    if (!visible || !token) return;
+    if (!isConnected || !client || !jummahId) {
+      setIsSubscribed(false);
+      return;
+    }
 
-    const socket = new SockJS('http://192.168.0.35:8080/ws');
-    const client = new Client({
-      webSocketFactory: () => socket,
-      connectHeaders: {
-        Authorization: `Bearer ${token}`,
-      },
-      reconnectDelay: 5000,
-      onConnect: () => {
-        setIsConnected(true);
-        client.subscribe(`/topic/jummah/${jummahId}`, (msg) => {
-          const parsed: ChatMessage = JSON.parse(msg.body);
-          onMessage(parsed);
-        });
-        // client.publish({
-        //   destination: `/app/jummah/${jummahId}`,
-        //   body: JSON.stringify({ sender: username, type: 'JOIN' }),
-        // });
-      },
+    const topicEndpoint = API_END_POINTS.WS_JUMMAH_TOPIC.replace(':jummahId', jummahId);
+
+    const subscription = client.subscribe(topicEndpoint, (message) => {
+      try {
+        const parsed: ChatMessage = JSON.parse(message.body);
+        onMessage(parsed);
+      } catch (error) {
+        console.error('Error parsing message:', error);
+      }
     });
 
-    client.activate();
-    clientRef.current = client;
+    setIsSubscribed(true);
 
     return () => {
-      // if (clientRef.current?.connected) {
-      //   clientRef.current.publish({
-      //     destination: `/app/jummah/${jummahId}`,
-      //     body: JSON.stringify({ sender: username, type: 'LEAVE' }),
-      //   });
-      // }
-      client.deactivate();
-      setIsConnected(false);
+      subscription.unsubscribe();
+      setIsSubscribed(false);
     };
-  }, [visible, token, jummahId, username]);
+  }, [isConnected, client, jummahId, onMessage]);
 
-  const send = (msg: string) => {
-    if (clientRef.current?.connected) {
-      const payload: ChatMessage = {
-        sender: username,
-        message: msg,
-        type: 'CHAT',
-      };
-      clientRef.current.publish({
-        destination: `/app/jummah/${jummahId}`,
-        body: JSON.stringify(payload),
-      });
-    } else {
-      console.warn('⚠️ Cannot send — STOMP is not connected');
+  /**
+   * Send a message to the Jummah chat
+   * @param message - The message text to send
+   */
+  const send = (message: string) => {
+    if (!isConnected || !client || !isSubscribed) {
+      console.warn('⚠️ Cannot send — WebSocket is not connected or subscribed');
+      return;
     }
+
+    const sendEndpoint = API_END_POINTS.WS_JUMMAH_SEND.replace(':jummahId', jummahId);
+
+    const payload: ChatTextMessage = {
+      type: 'CHAT',
+      sender: username,
+      message,
+      timestamp: new Date().toISOString(),
+    };
+
+    client.publish({
+      destination: sendEndpoint,
+      body: JSON.stringify(payload),
+    });
   };
 
-  return { isConnected, send };
+  return { 
+    isConnected: isConnected && isSubscribed, 
+    send 
+  };
 }

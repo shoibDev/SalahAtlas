@@ -69,6 +69,7 @@ public class AuthenticationController {
         AccountLoginResponse loginResponse = AccountLoginResponse.builder()
                 .accessToken(jwtToken)
                 .refreshToken(refreshToken)
+                .userId(authenticatedUser.getAccount().getId().toString())
                 .build();
 
         return ResponseEntity.ok(ApiResponse.success(loginResponse, "Authentication successful"));
@@ -149,9 +150,14 @@ public class AuthenticationController {
         String newAccessToken = jwtService.generateAccessToken(userDetails);
         String newRefreshToken = jwtService.generateRefreshToken(userDetails);
 
+        // Cast to AppUserDetails to get the account and user ID
+        AppUserDetails appUserDetails = (AppUserDetails) userDetails;
+        String userId = appUserDetails.getAccount().getId().toString();
+
         AccountLoginResponse response = AccountLoginResponse.builder()
                 .accessToken(newAccessToken)
                 .refreshToken(newRefreshToken)
+                .userId(userId)
                 .build();
 
         return ResponseEntity.ok(ApiResponse.success(response, "Tokens refreshed successfully"));

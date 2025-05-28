@@ -1,7 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
-import apiClient from '@/api/apiClient';
 import { ChatMessage } from '@/types/chat';
+import { getChatHistory } from '@/api/chatApi';
 
+/**
+ * Hook for managing chat history with pagination
+ * @param jummahId - The ID of the Jummah chat
+ * @returns Object containing messages, setMessages, loadMore, hasMore, and loading state
+ */
 export function useChatHistory(jummahId: string | undefined) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [page, setPage] = useState(0);
@@ -13,21 +18,21 @@ export function useChatHistory(jummahId: string | undefined) {
 
     try {
       setLoading(true);
-      const res = await apiClient.get(
-          `/chat/jummah/${jummahId}/history/pageable?page=${page}&size=20`
-      );
+      const response = await getChatHistory(jummahId, page);
 
-      const newMessages: ChatMessage[] = res.data.data.content;
+      const newMessages: ChatMessage[] = response.content;
       setMessages((prev) => [...prev, ...newMessages]); // Append at end (FlatList is inverted)
       setPage((prev) => prev + 1);
-      setHasMore(!res.data.data.last); // Check if last page
+      setHasMore(!response.last); // Check if last page
     } catch (err) {
       console.error('Failed to load chat history:', err);
+      // Don't rethrow the error to prevent UI disruption
     } finally {
       setLoading(false);
     }
   }, [jummahId, page, hasMore, loading]);
 
+  // Reset and load first page when jummahId changes
   useEffect(() => {
     setMessages([]);
     setPage(0);
@@ -40,5 +45,6 @@ export function useChatHistory(jummahId: string | undefined) {
     setMessages,
     loadMore,
     hasMore,
+    loading,
   };
 }

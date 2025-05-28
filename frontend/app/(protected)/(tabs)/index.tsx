@@ -9,7 +9,7 @@ import {
 import MapView, { Marker, LatLng, Region } from 'react-native-maps';
 import * as Location from 'expo-location';
 import CreateJummahForm from '../../../components/forms/CreateJummahForm';
-import { getNearbyJummah } from '@/api/jummah';
+import { getNearbyJummah } from '@/api/jummahApi';
 import { JummahMapResponse } from '@/types/jummah';
 import JummahMarkerCircle from "@/components/JummahMarkerCircle";
 import { useRouter } from 'expo-router';
@@ -139,9 +139,7 @@ const styles = StyleSheet.create({
     margin: 0,
   },
   modalContent: {
-    backgroundColor: '#1f2937',
     borderRadius: 12,
-    padding: 20,
     width: '90%',
     maxHeight: 500, // fixed height to prevent it filling the whole screen
     justifyContent: 'center',

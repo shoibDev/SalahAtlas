@@ -15,23 +15,26 @@ interface Props {
 }
 
 export default function ChatPreview({ onExpand }: Props) {
-  const { messages } = useChat();
+  const { messages, isConnected } = useChat();
   const theme = useTheme();
   const styles = getStyles(theme);
   const latestMessages = messages.slice(0, 15);
 
   return (
       <ImageBackground
-          source={theme.blackThreadBackground}
+          source={theme.absurdityTexture}
           style={styles.container}
           imageStyle={{
             borderRadius: 16,
             opacity: 1.06,
-            transform: [{ scale: 1.8 }], // 👈 Zoom in on texture
+            transform: [{ scale: 1.8 }],
           }}
       >
         <TouchableOpacity onPress={onExpand} style={styles.header}>
-          <Text style={styles.title}>Jummah Chat</Text>
+          <View style={styles.titleContainer}>
+            <Text style={styles.title}>Jummah Chat</Text>
+            <View style={[styles.connectionIndicator, isConnected ? styles.connected : styles.disconnected]} />
+          </View>
           <Text style={styles.expandIcon}>⤢</Text>
         </TouchableOpacity>
 
@@ -78,10 +81,27 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
         paddingBottom: 6,
         marginBottom: 8,
       },
+      titleContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+      },
       title: {
         color: theme.textPrimary,
         fontSize: 16,
         fontWeight: '700',
+        marginRight: 8,
+      },
+      connectionIndicator: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        marginTop: 1,
+      },
+      connected: {
+        backgroundColor: '#4CAF50', // Green
+      },
+      disconnected: {
+        backgroundColor: '#F44336', // Red
       },
       expandIcon: {
         fontSize: 18,

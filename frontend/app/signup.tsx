@@ -1,36 +1,65 @@
+// ─── 1. React & Core ────────────────────────────────────────
 import React, { useEffect, useRef, useState } from "react";
 import {
-  View,
+  Animated as RNAnimated,
+  Dimensions,
+  Image,
+  Keyboard,
+  StyleSheet,
   Text,
   TextInput,
-  StyleSheet,
   TouchableOpacity,
-  Dimensions,
-  Keyboard,
   TouchableWithoutFeedback,
-  Animated as RNAnimated,
-  Image,
-  Platform,
+  View
 } from "react-native";
+
+// ─── 2. Navigation & Forms ──────────────────────────────────────────
 import { useRouter } from "expo-router";
+import { useForm, Controller, Resolver } from "react-hook-form";
+
+// ─── 3. Animation & Icons ───────────────────────────────────
 import Animated, { FadeInUp } from "react-native-reanimated";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { useTheme } from "@/context/ThemeContext";
 
+// ─── 4. Contexts & Hooks ────────────────────────────────────
+import { useTheme } from "@/context/ThemeContext";
+import {RegisterRequest} from "@/types/auth";
+import {signup} from "@/api/authApi";
+
+// ─── 5. Constants ───────────────────────────────────────────
 const { width } = Dimensions.get("window");
+
+const resolver: Resolver<RegisterRequest> = async (values) => {
+  const errors: any = {};
+  if (!values.firstName) {
+    errors.firstName = { type: "required", message: "First name is required" };
+  }
+  if (!values.lastName) {
+    errors.lastName = { type: "required", message: "Last name is required" };
+  }
+  if (!values.email) {
+    errors.email = { type: "required", message: "Email is required" };
+  }
+  if (!values.password) {
+    errors.password = { type: "required", message: "Password is required" };
+  }
+  if (values.password !== values.confirmPassword) {
+    errors.confirmPassword = { type: "validate", message: "Passwords do not match" };
+  }
+
+  return {
+    values: Object.keys(errors).length === 0 ? values : {},
+    errors,
+  };
+}
 
 export default function SignupScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const { control, handleSubmit, formState: { errors } } = useForm<RegisterRequest>({ resolver });
   const shiftAnim = useRef(new RNAnimated.Value(0)).current;
 
   const [showPassword, setShowPassword] = useState(false);
-  const [gender, setGender] = useState("MALE");
-  const [firstName, setFirstName] = useState("test");
-  const [lastName, setLastName] = useState("test");
-  const [email, setEmail] = useState("shoibwahab001@gmail.com");
-  const [password, setPassword] = useState("test");
-  const [confirmPassword, setConfirmPassword] = useState("test");
 
   useEffect(() => {
     const show = Keyboard.addListener("keyboardDidShow", () => {
@@ -55,44 +84,14 @@ export default function SignupScreen() {
     };
   }, []);
 
-  const handleSignup = async () => {
+  const handleSignup = async (data: RegisterRequest) => {
 
     try {
-      const response = await fetch("http://192.168.0.35:8080/auth/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          firstName,
-          lastName,
-          email,
-          password,
-          gender,
-        }),
-      });
-
-      if (!response.ok) {
-        let errorMessage = "Signup failed: Server error";
-        try {
-          const contentType = response.headers.get("content-type");
-          if (contentType && contentType.includes("application/json")) {
-            const errorData = await response.json();
-            errorMessage = errorData.message || errorMessage;
-          }
-        } catch (jsonError) {
-          console.warn("Failed to parse error response JSON.");
-        }
-
-        alert(errorMessage);
-        return;
-      }
-
+      await signup(data );
       alert("Signup successful! Please verify your email.");
-    router.push({ pathname: "/verification", params: { email } });
-    } catch (error: any) {
-      console.error("Network or client error:", error.message);
-      alert("Signup failed: Network error or invalid setup");
+      router.push({ pathname: "/verification", params: { email: data.email } });
+    } catch (err: any) {
+      alert(err.message);
     }
   };
 
@@ -108,85 +107,117 @@ export default function SignupScreen() {
 
             <Animated.View entering={FadeInUp.delay(400)} style={styles.inputWrapper}>
               <View style={styles.row}>
-                <TextInput
-                    placeholder="First Name"
-                    placeholderTextColor={theme.placeholder}
-                    style={[styles.inputHalf, { marginRight: 10 }]}
-                    value={firstName}
-                    onChangeText={setFirstName}
+                <Controller
+                    control={control}
+                    name="firstName"
+                    render={({ field: { onChange, value } }) => (
+                      <TextInput
+                          placeholder="First Name"
+                          placeholderTextColor={theme.placeholder}
+                          style={[styles.inputHalf, { marginRight: 10 }]}
+                          value={value}
+                          onChangeText={onChange}
+                      />
+                    )}
                 />
-                <TextInput
-                    placeholder="Last Name"
-                    placeholderTextColor={theme.placeholder}
-                    style={styles.inputHalf}
-                    value={lastName}
-                    onChangeText={setLastName}
+                <Controller
+                    control={control}
+                    name="lastName"
+                    render={({ field: { onChange, value } }) => (
+                      <TextInput
+                          placeholder="Last Name"
+                          placeholderTextColor={theme.placeholder}
+                          style={[styles.inputHalf, { marginLeft: 10 }]}
+                          value={value}
+                          onChangeText={onChange}
+                      />
+                    )}
                 />
               </View>
 
-              <TextInput
-                  placeholder="Email"
-                  placeholderTextColor={theme.placeholder}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  style={styles.input}
-                  value={email}
-                  onChangeText={setEmail}
+              <Controller
+                  control={control}
+                  name="email"
+                  render={({ field: { onChange, value } }) => (
+                      <TextInput
+                          placeholder="Email"
+                          placeholderTextColor={theme.placeholder}
+                          style={styles.input}
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                          value={value}
+                          onChangeText={onChange}
+                      />
+                  )}
               />
 
               <View style={styles.passwordContainer}>
-                <TextInput
-                    placeholder="Password"
-                    placeholderTextColor={theme.placeholder}
-                    secureTextEntry={!showPassword}
-                    style={[styles.input, { flex: 1, marginBottom: 0 }]}
-                    onChangeText={setPassword}
+                <Controller
+                    control={control}
+                    name="password"
+                    render={({ field: { onChange, value } }) => (
+                        <TextInput
+                            placeholder="Password"
+                            placeholderTextColor={theme.placeholder}
+                            secureTextEntry={!showPassword}
+                            style={[styles.input, { flex: 1, marginBottom: 0 }]}
+                            value={value}
+                            onChangeText={onChange}
+                        />
+                    )}
                 />
                 <TouchableOpacity onPress={() => setShowPassword((prev) => !prev)} style={{ marginLeft: 10 }}>
                   <FontAwesome name={showPassword ? "eye" : "eye-slash"} size={20} color={theme.textSecondary} />
                 </TouchableOpacity>
               </View>
+              {errors.password && <Text style={styles.errorText}>{errors.password.message}</Text>}
 
-              <TextInput
-                  placeholder="Confirm Password"
-                  placeholderTextColor={theme.placeholder}
-                  secureTextEntry
-                  style={styles.input}
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-              />
-
-              {password !== confirmPassword && confirmPassword.length > 0 && (
-                  <Text style={styles.errorText}>Passwords do not match</Text>
-              )}
-
-              <View style={styles.genderContainer}>
-                {["MALE", "FEMALE"].map((g) => (
-                    <TouchableOpacity
-                        key={g}
-                        onPress={() => setGender(g)}
-                        style={[
-                          styles.genderBox,
-                          gender === g && styles.genderSelected,
-                        ]}
-                    >
-                      <Image
-                          source={
-                            g === "MALE"
-                                ? require("@/assets/images/boy.png")
-                                : require("@/assets/images/girl.png")
-                          }
-                          style={styles.genderImage}
-                          resizeMode="contain"
+              <Controller
+                  control={control}
+                  name="confirmPassword"
+                  render={({ field: { onChange, value } }) => (
+                      <TextInput
+                          placeholder="Confirm Password"
+                          placeholderTextColor={theme.placeholder}
+                          secureTextEntry
+                          style={styles.input}
+                          value={value}
+                          onChangeText={onChange}
                       />
-                      <Text style={styles.genderLabel}>{g === "MALE" ? "Male" : "Female"}</Text>
-                    </TouchableOpacity>
-                ))}
-              </View>
+                  )}
+              />
+              {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword.message}</Text>}
+
+              <Controller
+                  control={control}
+                  name="gender"
+                  render={({ field: { value, onChange } }) => (
+                      <View style={styles.genderContainer}>
+                        {["MALE", "FEMALE"].map((g) => (
+                            <TouchableOpacity
+                                key={g}
+                                onPress={() => onChange(g)}
+                                style={[
+                                  styles.genderBox,
+                                  value === g && styles.genderSelected,
+                                ]}
+                            >
+                              <Image
+                                  source={g === "MALE"
+                                      ? require("../assets/images/boy.png")
+                                      : require("../assets/images/girl.png")}
+                                  style={styles.genderImage}
+                              />
+                              <Text style={styles.genderLabel}>{g === "MALE" ? "Male" : "Female"}</Text>
+                            </TouchableOpacity>
+                        ))}
+                      </View>
+                  )}
+              />
             </Animated.View>
 
             <Animated.View entering={FadeInUp.delay(600)}>
-              <TouchableOpacity style={styles.button} onPress={handleSignup}>
+              <TouchableOpacity style={styles.button} onPress={handleSubmit(handleSignup)}>
                 <Text style={styles.buttonText}>Sign Up</Text>
               </TouchableOpacity>
             </Animated.View>
@@ -298,7 +329,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
         flex: 1,
       },
       errorText: {
-        color: theme.error || "#F87171",
+        color: "#F87171",
         fontSize: 14,
         marginBottom: 10,
         textAlign: "left",

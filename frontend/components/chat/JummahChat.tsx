@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -7,13 +7,13 @@ import {
   FlatList,
   StyleSheet,
   Platform,
-  KeyboardAvoidingView,
-  LayoutAnimation,
-  UIManager, ImageBackground,
+  Keyboard,
+  Animated,
+  Easing,
+  ImageBackground,
 } from 'react-native';
-import Modal from 'react-native-modal';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useJummahChatConnection } from '@/hook/useJummahChat';
+import { useJummahChat } from '@/hook/useJummahChat';
 import { ChatMessage } from '@/types/chat';
 import { useChat } from '@/context/ChatContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -35,30 +35,36 @@ export default function JummahChat({
                                    }: Props) {
   const theme = useTheme();
   const styles = getStyles(theme);
-  const { messages, setMessages, loadMore, hasMore } = useChat();
+  const { messages, setMessages, loadMore, hasMore, isConnected: contextConnected } = useChat();
   const [messageText, setMessageText] = useState('');
   const [loadingMore, setLoadingMore] = useState(false);
   const listRef = useRef<FlatList<ChatMessage>>(null);
   const scrollOffsetY = useRef(0);
   const [isNearBottom, setIsNearBottom] = useState(true);
+  const animatedBottom = useRef(new Animated.Value(0)).current;
 
   const scrollToBottom = () => {
     listRef.current?.scrollToOffset({ offset: 0, animated: true });
   };
 
-  const { isConnected, send } = useJummahChatConnection({
+  // Use the existing WebSocket connection just for sending messages
+  // The connection is established by the AuthWithWebSocketHandler in the protected layout
+  // The ChatContext already handles receiving messages
+  const { send } = useJummahChat({
     visible,
     jummahId,
     username,
     token,
     onMessage: (newMsg) => {
-      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-      setMessages((prev) => [newMsg, ...prev]);
+      // We don't need to handle messages here as the ChatContext already does that
       if (isNearBottom) {
         requestAnimationFrame(() => scrollToBottom());
       }
     },
   });
+
+  // Use the connection status from the ChatContext
+  const isConnected = contextConnected;
 
   const handleSend = () => {
     const trimmed = messageText.trim();
@@ -73,6 +79,48 @@ export default function JummahChat({
     await loadMore();
     setLoadingMore(false);
   };
+
+  useEffect(() => {
+    // Define the keyboard event type
+    type KeyboardEvent = {
+      endCoordinates: {
+        height: number;
+        screenX: number;
+        screenY: number;
+        width: number;
+      };
+    };
+
+    const onShow = (e: KeyboardEvent) => {
+      Animated.timing(animatedBottom, {
+        toValue: e.endCoordinates.height,
+        duration: 250,
+        easing: Easing.out(Easing.poly(4)),
+        useNativeDriver: false,
+      }).start();
+    };
+
+    const onHide = () => {
+      Animated.timing(animatedBottom, {
+        toValue: 0,
+        duration: 200,
+        easing: Easing.in(Easing.poly(4)),
+        useNativeDriver: false,
+      }).start();
+    };
+
+    const showSub = Keyboard.addListener('keyboardWillShow', onShow);
+    const hideSub = Keyboard.addListener('keyboardWillHide', onHide);
+    const showSubAndroid = Keyboard.addListener('keyboardDidShow', onShow);
+    const hideSubAndroid = Keyboard.addListener('keyboardDidHide', onHide);
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+      showSubAndroid.remove();
+      hideSubAndroid.remove();
+    };
+  }, []);
 
   const renderSystemMessage = (text: string) => (
       <Text style={styles.systemMessage}>{text}</Text>
@@ -105,123 +153,68 @@ export default function JummahChat({
           </TouchableOpacity>
       ) : null;
 
-  if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-    UIManager.setLayoutAnimationEnabledExperimental(true);
-  }
-
   return (
-      <Modal
-          isVisible={visible}
-          style={styles.modal}
-          backdropOpacity={0.6}
-          useNativeDriver
-          onBackdropPress={onClose}
-          onBackButtonPress={onClose}
-      >
-        <SafeAreaView style={styles.safeArea}>
-          <ImageBackground
-              source={theme.blackThreadBackground}
-              style={{ flex: 1 }}
-              imageStyle={{ opacity: 1.06 }}
-              resizeMode="cover"
-          >
-            <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={styles.keyboardContainer}
+      <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+        <ImageBackground
+            source={theme.absurdityTexture}
+            style={{ flex: 1 }}
+            imageStyle={{ transform: [{ scale: 1.8 }] }}
+            resizeMode="cover"
+        >
+          <FlatList
+              ref={listRef}
+              data={messages}
+              keyExtractor={(_, index) => index.toString()}
+              renderItem={renderItem}
+              inverted
+              ListFooterComponent={renderLoadMoreButton}
+              contentContainerStyle={styles.listContent}
+              keyboardShouldPersistTaps="handled"
+              onScroll={({ nativeEvent }) => {
+                const y = nativeEvent.contentOffset.y;
+                scrollOffsetY.current = y;
+                setIsNearBottom(y < 50);
+              }}
+              scrollEventThrottle={16}
+          />
+
+          <Animated.View style={[styles.inputContainer, { marginBottom: animatedBottom }]}>
+            <TextInput
+                style={styles.input}
+                value={messageText}
+                onChangeText={setMessageText}
+                placeholder="Type a message..."
+                placeholderTextColor={theme.textSecondary}
+                multiline
+            />
+            <TouchableOpacity
+                style={[styles.sendButton, !isConnected && styles.disabled]}
+                onPress={handleSend}
+                disabled={!isConnected}
             >
-              {/* 🟫 Solid Header */}
-              <View style={styles.headerContainer}>
-                <View style={styles.header}>
-                  <Text style={styles.title}>Jummah Chat</Text>
-                  <TouchableOpacity onPress={onClose}>
-                    <Text style={styles.closeButton}>×</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              {/* 📨 Messages */}
-              <FlatList
-                  ref={listRef}
-                  data={messages}
-                  keyExtractor={(_, index) => index.toString()}
-                  renderItem={renderItem}
-                  inverted
-                  ListFooterComponent={renderLoadMoreButton}
-                  contentContainerStyle={styles.listContent}
-                  keyboardShouldPersistTaps="handled"
-                  onScroll={({ nativeEvent }) => {
-                    const y = nativeEvent.contentOffset.y;
-                    scrollOffsetY.current = y;
-                    setIsNearBottom(y < 50);
-                  }}
-                  scrollEventThrottle={16}
-              />
-
-              {/* 🔲 Solid Input Row */}
-              <View style={styles.inputContainer}>
-                <TextInput
-                    style={styles.input}
-                    value={messageText}
-                    onChangeText={setMessageText}
-                    placeholder="Type a message..."
-                    placeholderTextColor={theme.textSecondary}
-                    multiline
-                />
-                <TouchableOpacity
-                    style={[styles.sendButton, !isConnected && styles.disabled]}
-                    onPress={handleSend}
-                    disabled={!isConnected}
-                >
-                  <Text style={styles.sendText}>{isConnected ? 'Send' : '...'}</Text>
-                </TouchableOpacity>
-              </View>
-            </KeyboardAvoidingView>
-          </ImageBackground>
-        </SafeAreaView>
-      </Modal>
+              <Text style={styles.sendText}>{isConnected ? 'Send' : '...'}</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </ImageBackground>
+      </SafeAreaView>
   );
 }
-const getStyles = (theme: ReturnType<typeof useTheme>) =>
+
+/**
+ * Generate styles based on the current theme
+ * @param theme - The current theme
+ * @returns StyleSheet object
+ */
+const getStyles = (theme: Theme) =>
     StyleSheet.create({
-      modal: {
-        margin: 0,
-        justifyContent: 'center',
-        alignItems: 'center',
-      },
       safeArea: {
         flex: 1,
         backgroundColor: theme.background,
         width: '100%',
-      },
-      keyboardContainer: {
-        flex: 1,
-        padding: 16,
-      },
-      headerContainer: {
-        width: '100%',
-        backgroundColor: theme.cardBackground,
-        paddingHorizontal: 16,
-        borderTopLeftRadius: 16,
-        borderTopRightRadius: 16,
-      },
-      header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingVertical: 16,
-        borderBottomWidth: 1,
-        borderColor: theme.surface,
-      },
-      title: {
-        color: theme.textPrimary,
-        fontSize: 18,
-        fontWeight: '700',
-      },
-      closeButton: {
-        fontSize: 26,
-        color: theme.textPrimary,
+        height: '100%',
       },
       listContent: {
+        marginLeft: 12,
         paddingBottom: 12,
       },
       messageLine: {
@@ -251,19 +244,13 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
         width: '100%',
         flexDirection: 'row',
         alignItems: 'flex-end',
-        backgroundColor: theme.cardBackground,
         paddingHorizontal: 12,
         paddingVertical: 10,
         borderTopWidth: 1,
         borderColor: theme.surface,
         borderBottomLeftRadius: 16,
         borderBottomRightRadius: 16,
-        marginBottom: 20,
-      },
-      inputRow: {
-        flexDirection: 'row',
-        alignItems: 'flex-end',
-        paddingTop: 10,
+        backgroundColor: theme.background,
       },
       input: {
         flex: 1,
@@ -275,7 +262,6 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
         fontSize: 16,
         maxHeight: 120,
       },
-
       sendButton: {
         marginLeft: 8,
         backgroundColor: theme.accent,
