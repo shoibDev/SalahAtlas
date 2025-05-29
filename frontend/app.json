@@ -22,7 +22,8 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "dev.expo.frontend"
+        "edgeToEdgeEnabled": true,
+        "package": "dev.expo.frontend"
     },
     "web": {
       "bundler": "metro",
