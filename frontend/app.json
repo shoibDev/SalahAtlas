@@ -14,22 +14,32 @@
     },
     "ios": {
       "supportsTablet": true,
-        "bundleIdentifier": "dev.expo.frontend"
+      "bundleIdentifier": "dev.expo.frontend"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       },
-        "edgeToEdgeEnabled": true,
-        "package": "dev.expo.frontend"
+      "edgeToEdgeEnabled": true,
+      "package": "dev.expo.frontend"
     },
     "web": {
       "bundler": "metro",
-      "output": "static",
+      "output": "static"
     },
     "plugins": [
       "expo-router",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 33,
+            "targetSdkVersion": 33,
+            "minSdkVersion": 21
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
