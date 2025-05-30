@@ -14,7 +14,6 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
-    "@gregfrench/react-native-wheel-picker": "^1.2.18",
     "@react-native-firebase/app": "^22.2.0",
     "@react-navigation/native": "^7.1.6",
     "@stomp/stompjs": "^7.1.1",
