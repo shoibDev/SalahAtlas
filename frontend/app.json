@@ -45,9 +45,7 @@
     "doctor": {
       "reactNativeDirectoryCheck": {
         "exclude": [
-          "@gregfrench/react-native-wheel-picker",
           "@stomp/stompjs",
-          "react-native-wheel-picker-expo",
           "sockjs-client"
         ],
         "listUnknownPackages": false
