@@ -21,6 +21,7 @@
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       },
+      "googleServicesFile": "./google-services.json",
       "edgeToEdgeEnabled": true,
       "package": "dev.expo.frontend"
     },

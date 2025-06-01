@@ -4,7 +4,7 @@ import {
   View,
   Dimensions,
   ActivityIndicator,
-  Alert,
+  Alert, Button, Text
 } from 'react-native';
 import MapView, { Marker, LatLng, Region } from 'react-native-maps';
 import * as Location from 'expo-location';
@@ -14,6 +14,10 @@ import { JummahMapResponse } from '@/types/jummah';
 import JummahMarkerCircle from "@/components/JummahMarkerCircle";
 import { useRouter } from 'expo-router';
 import Modal from 'react-native-modal';
+import {useNotification} from "@/context/NotificationContext";
+import * as Updates from "expo-updates";
+
+
 
 export default function MapScreen() {
   const [location, setLocation] = useState<Location.LocationObjectCoords | null>(null);
@@ -22,6 +26,32 @@ export default function MapScreen() {
   const [currentRegion, setCurrentRegion] = useState<Region | null>(null);
   const [nearbyJummahs, setNearbyJummahs] = useState<JummahMapResponse[]>([]);
   const router = useRouter();
+  const { expoPushToken, notification, error} = useNotification();
+  const [isUpdateAvailable, setIsUpdateAvailable] = useState(false);
+  const [isUpdatePending, setIsUpdatePending] = useState(false);
+  const [runTypeMessage, setRunTypeMessage] = useState("");
+
+/*
+  useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission denied', 'Location permission is required to use the map.');
+        return;
+      }
+
+      const loc = await Location.getCurrentPositionAsync({});
+      setLocation(loc.coords);
+
+      try {
+        const jummahs = await getNearbyJummah(loc.coords.latitude, loc.coords.longitude);
+        setNearbyJummahs(Array.isArray(jummahs) ? jummahs : []);
+      } catch (err) {
+        console.error('Failed to fetch nearby Jummahs', err);
+        Alert.alert('Error', 'Unable to load nearby Jummahs');
+      }
+    })();
+  }, []);*/
 
   useEffect(() => {
     (async () => {
@@ -41,6 +71,16 @@ export default function MapScreen() {
         console.error('Failed to fetch nearby Jummahs', err);
         Alert.alert('Error', 'Unable to load nearby Jummahs');
       }
+
+      const updateState = await Updates.useUpdates();
+      setRunTypeMessage(
+          updateState.currentlyRunning.isEmbeddedLaunch
+              ? "App is running from built-in code"
+              : "App is running an update"
+      );
+
+      if (updateState.isUpdateAvailable) setIsUpdateAvailable(true);
+      if (updateState.isUpdatePending) setIsUpdatePending(true);
     })();
   }, []);
 
@@ -115,6 +155,34 @@ export default function MapScreen() {
             />
           </View>
         </Modal>
+        <Text style={{ padding: 10 }}>{runTypeMessage}</Text>
+
+        <Button
+            title="Check for updates"
+            onPress={async () => {
+              const result = await Updates.checkForUpdateAsync();
+              if (result.isAvailable) {
+                setIsUpdateAvailable(true);
+                Alert.alert("Update available", "Click below to download and apply.");
+              } else {
+                Alert.alert("No updates", "App is up to date.");
+              }
+            }}
+        />
+
+        {isUpdateAvailable && (
+            <Button
+                title="Download and Apply Update"
+                onPress={async () => {
+                  try {
+                    await Updates.fetchUpdateAsync();
+                    await Updates.reloadAsync();
+                  } catch (e) {
+                    Alert.alert("Error applying update");
+                  }
+                }}
+            />
+        )}
       </View>
   );
 
