@@ -14,16 +14,14 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "dev.expo.frontend"
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       },
       "googleServicesFile": "./google-services.json",
-      "edgeToEdgeEnabled": true,
-      "package": "dev.expo.frontend"
+      "edgeToEdgeEnabled": true
     },
     "web": {
       "bundler": "metro",
@@ -39,11 +37,9 @@
     },
     "extra": {
       "router": {},
-      "eas": {
-        "projectId": "15abcf36-5f1f-4c77-8865-a1515feec0be"
-      }
+      "_note": "Sensitive information moved to app-secret.json"
     },
-    "owner": "shubydrive",
+    "_note": "Owner information moved to app-secret.json",
     "doctor": {
       "reactNativeDirectoryCheck": {
         "exclude": [
