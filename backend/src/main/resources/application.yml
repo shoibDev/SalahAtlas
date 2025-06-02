@@ -2,35 +2,17 @@ spring:
   application:
     name: project-backend
 
-  datasource:
-    url: jdbc:postgresql://localhost:5432/islamdb
-    driver-class-name: org.postgresql.Driver
-    username: postgres
-    password: 1234
+  config:
+    import: application-secret.yml
 
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
 
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: sediq1973@gmail.com          # replace with your Gmail
-    password: jalf lelu gdyo rmmb             # use an App Password, not your Gmail password
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-            required: true
-
-
-security:
-  jwt:
-    secret-key: 3cfa76ef14937c1c0ea519f8fc057a80fcd04a7420f8e8bcd0a7567c272e007b
-    expiration-ms: 86400000
-
-frontend:
-  verification-url: https://yourfrontend.com/verify   # Replace with your actual deployed React route
+# Sensitive information has been moved to application-secret.yml
+# This includes:
+# - Database configuration
+# - Email settings
+# - JWT security settings
+# - Frontend URLs

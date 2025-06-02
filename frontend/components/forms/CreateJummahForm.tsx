@@ -21,9 +21,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { createJummah } from '@/api/jummahApi';
 import { JummahCreateRequest } from '@/types/jummah';
 
-import Picker from '@gregfrench/react-native-wheel-picker';
+
 import {ScrollWheel} from "@/components/ScrollWheel";
-const PickerItem = Picker.Item;
+
 
 const { width } = Dimensions.get("window");
 const PRAYER_TIMES: JummahCreateRequest['prayerTime'][] = ['FAJR', 'DHUHR', 'ASR', 'MAGHRIB', 'ISHA'];
