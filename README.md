@@ -181,16 +181,23 @@ The application implements a secure user verification system:
 
 This implementation ensures user account security while providing a smooth onboarding experience across different devices and contexts.
 
-## Demo
+## Demo - (Video Coming Soon)
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/2efb54f5-6ac0-4fb6-8182-ee72671937f8" width="200"/>
+  <img src="https://github.com/user-attachments/assets/443c4ce1-9ca9-4df2-96a0-5068b83a6238" width="200"/>
+  <img src="https://github.com/user-attachments/assets/2246a5a6-764e-479b-a275-b80ce7856e4d" width="200"/>
+</p>
 
-[Insert video demonstration here]
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/fe0e4dc3-9862-44f3-95bb-d6cdefcbd393" width="200"/>
+  <img src="https://github.com/user-attachments/assets/dcc56122-bf1c-4d0e-9c3f-543b26104257" width="200"/>
+  <img src="https://github.com/user-attachments/assets/1ac0ada2-80c0-4c7c-8db7-24c4f50d5f2a" width="200"/>
+</p>
 
-This video demonstrates the key features of SalahAtlas, including:
-- User registration and login
-- Prayer time notifications
-- Qibla compass functionality
-- Community features
-- Settings and preferences
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/f16560e0-5804-49bd-9a02-a9afd6a8f3d9" width="200"/>
+</p>
+
 
 ## Authentication Flow
 
