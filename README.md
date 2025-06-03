@@ -1,5 +1,5 @@
 
-# SalahAtlas - Islamic Prayer and Community Application
+# SalahAtlas - Islamic Congregation App (Coming to IOS soon!)
 
 SalahAtlas is a comprehensive Islamic application designed to help Muslims connect with their faith and community. The application provides prayer times, qibla direction, community features, and more, all within a secure and user-friendly environment.
 
